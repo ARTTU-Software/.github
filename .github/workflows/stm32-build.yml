@@ -22,12 +22,11 @@ jobs:
         with:
           submodules: recursive 
 
-      - name: Install Cppcheck
-        # This image already has gcc-arm-none-eabi, cmake, and ninja.
-        # We just need the linter.
+      - name: Install Build Tools & Linters
         run: |
           apt-get update -qq
-          apt-get install -y cppcheck
+          # We need to explicitly add cmake and ninja-build for this image
+          apt-get install -y cmake ninja-build cppcheck
 
       - name: Configure CMake
         run: |
