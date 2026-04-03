@@ -13,8 +13,8 @@ jobs:
     name: CMake Compile
     runs-on: ubuntu-latest
     container:
-      # DO NOT add ghcr.io/ here. This pulls straight from Docker Hub.
-      image: jafee201153/arm-none-eabi-gcc:latest
+      # This image is maintained, up-to-date, and HAS cmake/ninja/gcc already.
+      image: docker.io/zephyrprojectrtos/zephyr-build:latest
 
     steps:
       - name: Checkout repository
@@ -22,16 +22,17 @@ jobs:
         with:
           submodules: recursive 
 
-      - name: Install Build Tools & Linters
+      - name: Install Cppcheck
+        # Zephyr has everything EXCEPT the linter. 
+        # This will be near-instant since the cache is fresh.
         run: |
-          apt-get update -qq
-          # We need to explicitly add cmake and ninja-build for this image
-          apt-get install -y cmake ninja-build cppcheck
+          sudo apt-get update -qq
+          sudo apt-get install -y cppcheck
 
       - name: Configure CMake
         run: |
+          # No setup needed, cmake and ninja are already in the PATH
           cmake -B build -G Ninja \
-            -DCMAKE_MAKE_PROGRAM=$(which ninja) \
             -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
@@ -48,18 +49,11 @@ jobs:
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Detect if we are in a PR or a push
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            REPORTER="github-pr-review"
-          else
-            REPORTER="github-check"
-          fi
-
-          JSON_PATH=$(find build -name compile_commands.json)
+          REPORTER=$([[ "${{ github.event_name }}" == "pull_request" ]] && echo "github-pr-review" || echo "github-check")
           
-          # Dynamic exclusion of ST libraries to prevent hangs
+          JSON_PATH=$(find build -name compile_commands.json)
           IGNORE_ARGS=$(find Drivers -maxdepth 1 -type d \( -name "*_HAL_Driver" -o -name "CMSIS" \) -printf "-i %p ")
-
+          
           cppcheck --project="$JSON_PATH" $IGNORE_ARGS \
             --enable=warning,performance,portability --inline-suppr \
             --max-ctu-depth=2 -j 2 2>&1 | \
