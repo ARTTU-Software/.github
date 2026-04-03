@@ -69,6 +69,11 @@ jobs:
           fi
 
           # 2. Run cppcheck and pipe it to reviewdog using that dynamic variable
-          # Removed --quiet so we can see the file scan progress in the logs
-          cppcheck --project=build/compile_commands.json --enable=warning,performance,portability --inconclusive 2>&1 | \
+          # We use $(find ...) to locate the compile_commands.json regardless of the subfolder
+          COMPILE_COMMANDS=$(find build -name compile_commands.json | head -n 1)
+          
+          echo "Using compile commands from: $COMPILE_COMMANDS"
+
+          cppcheck --project=$COMPILE_COMMANDS --enable=warning,performance,portability \
+            --inconclusive --force . 2>&1 | \
           reviewdog -efm="%f:%l:%c: %m" -efm="%f:%l: %m" -name="cppcheck" -reporter=$REPORTER -level=warning
