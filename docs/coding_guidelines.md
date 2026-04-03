@@ -13,13 +13,13 @@ We use a **Mainline/Feature** workflow. **All development must be merged into `d
 | Type | Prefix | Use Case |
 | :--- | :--- | :--- |
 | **Integration** | `dev/` | The primary branch for active development and subteam integration. |
-| **Feature** | `feat/` | New functionality (e.g., `feat/add-can-filter`). **Merge into `dev/`**. |
+| **Feature** | `feature/` | New functionality (e.g., `feature/add-can-filter`). **Merge into `dev/`**. |
 | **Bugfix** | `fix/` | Fixing a bug (e.g., `fix/can-timing-offset`). **Merge into `dev/`**. |
-| **Refactor** | `ref/` | Code cleanup with no functional changes. **Merge into `dev/`**. |
+| **Refactor** | `refactor/` | Code cleanup with no functional changes. **Merge into `dev/`**. |
 | **Testing** | `test/` | Experimental code or new unit tests. |
 | **Docs** | `docs/` | Documentation only. |
 
-> **Important**: Never push directly to `main`. Open a Pull Request from your `feat/` or `fix/` branch into `dev/`. Once `dev/` is stable and tested on the car, a lead will merge `dev/` into `main`.
+> **Important**: Never push directly to `main`. Open a Pull Request from your `feature/` or `fix/` branch into `dev/`. Once `dev/` is stable and tested on the car, a lead will merge `dev/` into `main`.
 
 # Code Style
 * **Indentation**: Use 4 spaces. Do not use tabs.
