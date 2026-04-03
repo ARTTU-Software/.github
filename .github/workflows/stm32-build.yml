@@ -61,19 +61,23 @@ jobs:
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 1. Determine the correct reporter based on the event type
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             REPORTER="github-pr-review"
           else
             REPORTER="github-check"
           fi
 
-          # 2. Run cppcheck and pipe it to reviewdog using that dynamic variable
-          # We use $(find ...) to locate the compile_commands.json regardless of the subfolder
-          COMPILE_COMMANDS=$(find build -name compile_commands.json | head -n 1)
-          
-          echo "Using compile commands from: $COMPILE_COMMANDS"
+          # 1. Hardcode the path to where you said it lives
+          JSON_PATH="build/Debug/compile_commands.json"
 
-          cppcheck --project=$COMPILE_COMMANDS --enable=warning,performance,portability \
-            --inconclusive --force . 2>&1 | \
+          # 2. DEBUG: Print the first 20 lines of the JSON so we can see the paths
+          echo "--- Content of $JSON_PATH (First 20 lines) ---"
+          head -n 20 "$JSON_PATH" || echo "FILE NOT FOUND!"
+
+          # 3. Run cppcheck using the hardcoded project file
+          # We add --check-config to see if cppcheck complains about missing includes
+          cppcheck --project="$JSON_PATH" \
+            --enable=warning,performance,portability \
+            --inconclusive \
+            --check-config 2>&1 | \
           reviewdog -efm="%f:%l:%c: %m" -efm="%f:%l: %m" -name="cppcheck" -reporter=$REPORTER -level=warning
