@@ -1,6 +1,6 @@
 ## 🧭 Coding Guidelines
 
-Rules to keep the ART TU Cluj-Napoca codebase consistent, readable, and professional.
+Rules to keep the codebase relatively (hopefully) clean.
 
 # Repository Structure & Organization
 * **Repo-per-Board**: Each repository represents exactly one hardware board (ECU, Dashboard, etc.).
