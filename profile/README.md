@@ -1,7 +1,7 @@
-# ART TU Cluj-Napoca Software Stack 2026
+# ART TU Cluj-Napoca Software Stack
 
 ![Car 2025](<../docs/img/20250824_10-55-24_8545_kohler-X3 (1).jpg>)
-Top-level overview for the ART TU Cluj-Napoca Formula Student software stack. This organization contains all code powering the 2026 racecar.
+Top-level overview for the ART TU Cluj-Napoca Formula Student software stack. This organization contains all code powering the racecar.
 
 ### Contributing
 Review the [**Coding Guidelines**](../docs/coding_guidelines.md) before opening a Pull Request. CI checks are strictly enforced on all board firmware.
