@@ -17,6 +17,12 @@
     - any-glob-to-any-file: 
       - '**/*.py'
 
+'Arduino':
+  - changed-files:
+    - any-glob-to-any-file: 
+      - '**/*.ino'
+      - '**/*.pde'
+
 'Driver':
   - changed-files:
     - any-glob-to-any-file: 
