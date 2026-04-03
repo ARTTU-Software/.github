@@ -1,0 +1,40 @@
+name: STM32 Build Template
+
+on:
+  workflow_call:
+    # You can optionally define inputs here if some repos need slight variations
+    # inputs:
+    #   build_type:
+    #     type: string
+    #     default: 'Release'
+
+jobs:
+  build:
+    name: CMake Compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive 
+
+      - name: Install ARM Toolchain & Build Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi cmake ninja-build
+
+      - name: Configure CMake
+        run: cmake -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/stm32cubemx/gcc-arm-none-eabi.cmake -DCMAKE_BUILD_TYPE=Release
+
+      - name: Compile Project
+        run: cmake --build build
+
+      - name: Upload Firmware Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: stm32-firmware
+          path: |
+            build/**/*.elf
+            build/**/*.bin
+            build/**/*.map
+          if-no-files-found: warn
