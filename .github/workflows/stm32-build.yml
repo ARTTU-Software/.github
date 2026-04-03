@@ -41,40 +41,10 @@ jobs:
       - name: Upload Firmware Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: stm32-firmware
+          name: stm32-artifacts
           path: |
             build/**/*.elf
             build/**/*.bin
             build/**/*.map
+            build/compile_commands.json
           if-no-files-found: warn
-
-      # --- REVIEWDOG STEPS ---
-
-      - name: Setup Reviewdog
-        if: ${{ inputs.run_reviewdog }}
-        uses: reviewdog/action-setup@v1
-        with:
-          reviewdog_version: latest
-
-      - name: Run Cppcheck via Reviewdog
-        if: ${{ inputs.run_reviewdog }}
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          REPORTER=$([[ "${{ github.event_name }}" == "pull_request" ]] && echo "github-pr-review" || echo "github-check")
-          
-          JSON_PATH=$(find build -name compile_commands.json)
-          IGNORE_ARGS=$(find Drivers -maxdepth 1 -type d \( -name "*_HAL_Driver" -o -name "CMSIS" \) -printf "-i %p ")
-
-          # 1. We use --template=gcc so the output is standardized
-          # 2. We use 'sed' to turn absolute paths into relative paths
-          # 3. We use -filter-mode=nofilter to stop Reviewdog from being "helpful" and hiding old errors
-          cppcheck --project="$JSON_PATH" $IGNORE_ARGS \
-            --template=gcc --enable=warning,performance,portability \
-            --inline-suppr --max-ctu-depth=2 -j 2 2>&1 | \
-          sed "s|$(pwd)/||g" | \
-          reviewdog -f=gcc \
-            -name="cppcheck" \
-            -reporter=$REPORTER \
-            -filter-mode=nofilter \
-            -level=warning
