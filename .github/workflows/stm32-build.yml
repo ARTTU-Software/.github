@@ -18,10 +18,24 @@ jobs:
         with:
           submodules: recursive 
 
-      - name: Install ARM Toolchain & Build Tools
+      - name: Install ARM Toolchain
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: 'latest'
+
+      - name: Install Ninja
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+
+      - name: Debug Filesystem
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi cmake ninja-build
+          echo "--- Listing Drivers/common ---"
+          ls -la Drivers/common/
+          
+          echo "--- Listing drivers folder (case-sensitive search) ---"
+          ls -la Drivers/common/drivers/ || echo "drivers folder not found!"
+          
+          echo "--- Finding all .c files in the submodule ---"
+          find Drivers/common -type f -name "*.c"
 
       - name: Configure CMake
         run: |
