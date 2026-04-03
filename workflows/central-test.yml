@@ -1,0 +1,37 @@
+# In ARTTU-Software/.github/.github/workflows/central-test.yml
+name: Central Ceedling Unit Tests
+on: 
+  workflow_call: # This workflow can be called by other workflows
+
+permissions:
+  checks: write
+  pull-requests: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+
+      - name: Install Ceedling & Dependencies
+        run: |
+          gem install ceedling
+          sudo apt-get update && sudo apt-get install -y gcovr gcc
+
+      - name: Run Unit Tests
+        run: |
+          mkdir -p test/support
+          ceedling test:all
+
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: build/artifacts/test/junit_tests_report.xml
