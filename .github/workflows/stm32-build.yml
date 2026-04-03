@@ -13,9 +13,9 @@ jobs:
   build:
     name: CMake Compile
     runs-on: ubuntu-latest
-    # This runs every step below inside a pre-configured ARM environment
     container:
-      image: ghcr.io/arm-software/arm-none-eabi-gcc:13.2.rel1
+      # This is a very stable image used for STM32 CI
+      image: ghcr.io/stefanct/stm32-build:latest
 
     steps:
       - name: Checkout repository
