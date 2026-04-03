@@ -1,19 +1,15 @@
-# In ARTTU-Software/.github/.github/workflows/central-test.yml
 name: Central Ceedling Unit Tests
 on: 
-  workflow_call: # This workflow can be called by other workflows
-
-permissions:
-  checks: write
-  pull-requests: write
-  contents: read
+  workflow_call:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive # Fetches common repo
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
