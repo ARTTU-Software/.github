@@ -12,9 +12,9 @@ jobs:
   build:
     name: CMake Compile
     runs-on: ubuntu-latest
-    # Using a verified, existing image for firmware development
     container:
-      image: docker.io/akospasztor/docker-gcc-arm:latest
+      # DO NOT add ghcr.io/ here. This pulls straight from Docker Hub.
+      image: jafee201153/arm-none-eabi-gcc:latest
 
     steps:
       - name: Checkout repository
@@ -23,7 +23,7 @@ jobs:
           submodules: recursive 
 
       - name: Install Cppcheck
-        # CMake and Ninja are already in this image! 
+        # This image already has gcc-arm-none-eabi, cmake, and ninja.
         # We just need the linter.
         run: |
           apt-get update -qq
@@ -31,9 +31,8 @@ jobs:
 
       - name: Configure CMake
         run: |
-          # The toolchain path is usually /usr/bin or /opt/gcc... 
-          # This image handles the PATH automatically.
           cmake -B build -G Ninja \
+            -DCMAKE_MAKE_PROGRAM=$(which ninja) \
             -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
@@ -50,12 +49,18 @@ jobs:
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          REPORTER=$([[ "${{ github.event_name }}" == "pull_request" ]] && echo "github-pr-review" || echo "github-check")
-          
+          # Detect if we are in a PR or a push
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            REPORTER="github-pr-review"
+          else
+            REPORTER="github-check"
+          fi
+
           JSON_PATH=$(find build -name compile_commands.json)
-          IGNORE_ARGS=$(find Drivers -maxdepth 1 -type d \( -name "*_HAL_Driver" -o -name "CMSIS" \) -printf "-i %p ")
           
-          # Parallelized scan with a depth limit to prevent hangs
+          # Dynamic exclusion of ST libraries to prevent hangs
+          IGNORE_ARGS=$(find Drivers -maxdepth 1 -type d \( -name "*_HAL_Driver" -o -name "CMSIS" \) -printf "-i %p ")
+
           cppcheck --project="$JSON_PATH" $IGNORE_ARGS \
             --enable=warning,performance,portability --inline-suppr \
             --max-ctu-depth=2 -j 2 2>&1 | \
