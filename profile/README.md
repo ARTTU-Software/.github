@@ -12,15 +12,15 @@ We use a multi-repository structure. Each major hardware board and system has it
 #### Core Systems
 - [**`ECU`**](link-to-repo) - Electronic Control Unit firmware.
 - [**`CAN-Gateway`**](link-to-repo) - Sensor aggregation / filtering.
-- [**`GI`**](link-to-repo) — Galvanic Isolator
-- [**`Dashboard`**](link-to-repo) — UI, Main Drivers, Display
-- [**`Telemetry`**](link-to-repo) — Car-to-pit data transmission and real-time visualization.
+- [**`GI`**](link-to-repo) - Galvanic Isolator
+- [**`Dashboard`**](link-to-repo) - UI, Main Drivers, Display
+- [**`Telemetry`**](link-to-repo) - Car-to-pit data transmission and real-time visualization.
 
 #### Data & Analytics
-- [**`Backend`**](link-to-repo) — Grafana + InfluxDB + Marple + Middleman Architecture
+- [**`Backend`**](link-to-repo) - Grafana + InfluxDB + Marple + Middleman Architecture
 
 #### Shared Libraries
-- [**`Commons`**](link-to-repo) — Shared C/C++ libraries used across multiple boards (CAN drivers, math utilities, struct definitions).
+- [**`Commons`**](link-to-repo) - Shared C/C++ libraries used across multiple boards (CAN drivers, math utilities, struct definitions).
 
 ---
 
