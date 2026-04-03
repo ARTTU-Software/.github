@@ -1,30 +1,32 @@
 name: Central Ceedling Unit Tests
 on: 
   workflow_call:
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          submodules: recursive # Fetches common repo
+          submodules: recursive
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
+          bundler-cache: true
 
-      - name: Install Ceedling & Dependencies
-        run: |
-          gem install ceedling
-          sudo apt-get update && sudo apt-get install -y gcovr gcc
+      - name: Install Dependencies
+        run: sudo apt-get update && sudo apt-get install -y gcovr gcc
 
       - name: Run Unit Tests
         run: |
           mkdir -p test/support
-          ceedling test:all
+          bundle exec ceedling test:all
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
