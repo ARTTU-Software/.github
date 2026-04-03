@@ -13,19 +13,22 @@ jobs:
   build:
     name: CMake Compile
     runs-on: ubuntu-latest
+    # This runs every step below inside a pre-configured ARM environment
+    container:
+      image: ghcr.io/arm-software/arm-none-eabi-gcc:13.2.rel1
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive 
 
-      - name: Install ARM Toolchain
-        uses: carlosperate/arm-none-eabi-gcc-action@v1
-        with:
-          release: 'latest'
-
       - name: Install Build Tools & Linters
-        run: sudo apt-get update && sudo apt-get install -y ninja-build cppcheck
+        # Since the Docker image is slim, we grab Ninja and Cppcheck.
+        # This is much faster because we don't have to install the 500MB compiler.
+        run: |
+          apt-get update
+          apt-get install -y ninja-build cppcheck
 
       - name: Configure CMake
         run: |
@@ -69,14 +72,11 @@ jobs:
 
           JSON_PATH=$(find build -name compile_commands.json)
 
-          # 1. Dynamically find all HAL and CMSIS driver folders to ignore them
-          # This keeps the linter focused ONLY on your /Core and /App code
+          # Find HAL and CMSIS driver folders to ignore them (Universal wildcards)
           IGNORE_ARGS=$(find Drivers -maxdepth 1 -type d \( -name "*_HAL_Driver" -o -name "CMSIS" \) -printf "-i %p ")
           
           echo "Ignoring vendor libraries: $IGNORE_ARGS"
 
-          # 2. Run with a strict timeout and parallel cores
-          # --max-ctu-depth=2 prevents the 'infinite loop' hang on complex macros
           cppcheck --project="$JSON_PATH" \
             $IGNORE_ARGS \
             --enable=warning,performance,portability \
