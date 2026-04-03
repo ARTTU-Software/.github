@@ -2,11 +2,12 @@ name: STM32 Build Template
 
 on:
   workflow_call:
-    # You can optionally define inputs here if some repos need slight variations
-    # inputs:
-    #   build_type:
-    #     type: string
-    #     default: 'Release'
+    inputs:
+      run_reviewdog:
+        description: 'Run Reviewdog linters (cppcheck/gcc)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -23,26 +24,16 @@ jobs:
         with:
           release: 'latest'
 
-      - name: Install Ninja
-        run: sudo apt-get update && sudo apt-get install -y ninja-build
-
-      - name: Debug Filesystem
-        run: |
-          echo "--- Listing Drivers/common ---"
-          ls -la Drivers/common/
-          
-          echo "--- Listing drivers folder (case-sensitive search) ---"
-          ls -la Drivers/common/drivers/ || echo "drivers folder not found!"
-          
-          echo "--- Finding all .c files in the submodule ---"
-          find Drivers/common -type f -name "*.c"
+      - name: Install Build Tools & Linters
+        run: sudo apt-get update && sudo apt-get install -y ninja-build cppcheck
 
       - name: Configure CMake
         run: |
           cmake -B build -G Ninja \
             -DCMAKE_MAKE_PROGRAM=$(which ninja) \
             -DCMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE/cmake/gcc-arm-none-eabi.cmake \
-            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
       - name: Compile Project
         run: cmake --build build
@@ -56,3 +47,19 @@ jobs:
             build/**/*.bin
             build/**/*.map
           if-no-files-found: warn
+
+      # --- REVIEWDOG STEPS ---
+
+      - name: Setup Reviewdog
+        if: ${{ inputs.run_reviewdog }}
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+
+      - name: Run Cppcheck via Reviewdog
+        if: ${{ inputs.run_reviewdog }}
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cppcheck --project=build/compile_commands.json --enable=warning,performance,portability --inconclusive --quiet 2>&1 | \
+          reviewdog -efm="%f:%l:%c: %m" -efm="%f:%l: %m" -name="cppcheck" -reporter=github-pr-review -level=warning
