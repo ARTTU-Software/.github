@@ -61,5 +61,13 @@ jobs:
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # 1. Determine the correct reporter based on the event type
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            REPORTER="github-pr-review"
+          else
+            REPORTER="github-check"
+          fi
+
+          # 2. Run cppcheck and pipe it to reviewdog using that dynamic variable
           cppcheck --project=build/compile_commands.json --enable=warning,performance,portability --inconclusive --quiet 2>&1 | \
-          reviewdog -efm="%f:%l:%c: %m" -efm="%f:%l: %m" -name="cppcheck" -reporter=github-pr-review -level=warning
+          reviewdog -efm="%f:%l:%c: %m" -efm="%f:%l: %m" -name="cppcheck" -reporter=$REPORTER -level=warning
