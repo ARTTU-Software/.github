@@ -67,17 +67,22 @@ jobs:
             REPORTER="github-check"
           fi
 
-          # 1. Hardcode the path to where you said it lives
-          JSON_PATH="build/Debug/compile_commands.json"
+          echo "--- Locating compile_commands.json ---"
+          # This finds the file and stores the path in a variable
+          JSON_PATH=$(find build -name compile_commands.json)
+          
+          if [ -z "$JSON_PATH" ]; then
+            echo "ERROR: compile_commands.json not found anywhere in build/!"
+            echo "--- Contents of build directory for reference ---"
+            ls -R build
+            exit 1
+          fi
 
-          # 2. DEBUG: Print the first 20 lines of the JSON so we can see the paths
-          echo "--- Content of $JSON_PATH (First 20 lines) ---"
-          head -n 20 "$JSON_PATH" || echo "FILE NOT FOUND!"
+          echo "Found file at: $JSON_PATH"
+          echo "--- File Content (First 10 lines) ---"
+          head -n 10 "$JSON_PATH"
 
-          # 3. Run cppcheck using the hardcoded project file
-          # We add --check-config to see if cppcheck complains about missing includes
           cppcheck --project="$JSON_PATH" \
             --enable=warning,performance,portability \
-            --inconclusive \
-            --check-config 2>&1 | \
+            --inconclusive --force 2>&1 | \
           reviewdog -efm="%f:%l:%c: %m" -efm="%f:%l: %m" -name="cppcheck" -reporter=$REPORTER -level=warning
