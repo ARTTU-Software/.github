@@ -1,26 +1,40 @@
 'C/C++':
-  - '**/*.c'
-  - '**/*.cpp'
-  - '**/*.h'
-  - '**/*.hpp'
+  - changed-files:
+    - any-glob-to-any-file: 
+      - '**/*.c'
+      - '**/*.cpp'
+      - '**/*.h'
+      - '**/*.hpp'
 
 'TypeScript':
-  - '**/*.ts'
-  - '**/*.tsx'
+  - changed-files:
+    - any-glob-to-any-file: 
+      - '**/*.ts'
+      - '**/*.tsx'
 
 'Python':
-  - '**/*.py'
+  - changed-files:
+    - any-glob-to-any-file: 
+      - '**/*.py'
 
 'Driver':
-  - 'Drivers/**/*'
+  - changed-files:
+    - any-glob-to-any-file: 
+      - 'Drivers/**/*'
 
 'CI/CD':
-  - '.github/**/*'
+  - changed-files:
+    - any-glob-to-any-file: 
+      - '.github/**/*'
 
 'documentation':
-  - 'docs/**/*'
-  - '**/*.md'
+  - changed-files:
+    - any-glob-to-any-file: 
+      - 'docs/**/*'
+      - '**/*.md'
 
 'Build System':
-  - '**/CMakeLists.txt'
-  - '**/*.cmake'
+  - changed-files:
+    - any-glob-to-any-file: 
+      - '**/CMakeLists.txt'
+      - '**/*.cmake'
