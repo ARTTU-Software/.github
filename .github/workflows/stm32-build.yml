@@ -24,12 +24,7 @@ jobs:
           sudo apt-get install -y gcc-arm-none-eabi cmake ninja-build
 
       - name: Configure CMake
-        # We use ${{ github.workspace }} to force an absolute path so CMake 
-        # doesn't look inside the /build folder for the toolchain file.
-        run: >
-          cmake -B build -G Ninja 
-          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/cmake/stm32cubemx/gcc-arm-none-eabi.cmake 
-          -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE/cmake/stm32cubemx/gcc-arm-none-eabi.cmake -DCMAKE_BUILD_TYPE=Release
 
       - name: Compile Project
         run: cmake --build build
