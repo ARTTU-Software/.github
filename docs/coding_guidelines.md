@@ -1,54 +1,47 @@
 ## 🧭 Coding Guidelines
 
-Some basic rules to keep the codebase consistent, readable, and not nakaz:
+Rules to keep the ART TU Cluj-Napoca codebase consistent, readable, and professional.
 
-# Structure & Organization
-- Follow the folder layout in the repo (don’t dump files randomly pls).
-- Each board (BMS, ECU, IMU, etc.) has its own `src/` and `include/` directories. If on STM32, follow basic design guidelines.
-- Shared code (drivers, utilities, math, etc.) goes in [/common](../common).
-- Try to keep commits small and focused — (hopefully) one logical change per commit.
+# Repository Structure & Organization
+* **Repo-per-Board**: Each repository represents exactly one hardware board (ECU, Dashboard, etc.).
+* **The `lib/commons` Submodule**: Shared drivers and math utilities are linked via Git Submodules. **Do not** manually copy code from `Commons` into your repo.
+* **Atomic Commits**: Keep commits small. One logical change per commit (e.g., "Add CAN mailbox filtering" not "Work on car").
+
+# Branch Conventions
+We use a **Mainline/Feature** workflow. **All development must be merged into `dev/` first** for integration testing before reaching the production-ready `main` branch.
+
+| Type | Prefix | Use Case |
+| :--- | :--- | :--- |
+| **Integration** | `dev/` | The primary branch for active development and subteam integration. |
+| **Feature** | `feat/` | New functionality (e.g., `feat/add-can-filter`). **Merge into `dev/`**. |
+| **Bugfix** | `fix/` | Fixing a bug (e.g., `fix/can-timing-offset`). **Merge into `dev/`**. |
+| **Refactor** | `ref/` | Code cleanup with no functional changes. **Merge into `dev/`**. |
+| **Testing** | `test/` | Experimental code or new unit tests. |
+| **Docs** | `docs/` | Documentation only. |
+
+> **Important**: Never push directly to `main`. Open a Pull Request from your `feat/` or `fix/` branch into `dev/`. Once `dev/` is stable and tested on the car, a lead will merge `dev/` into `main`.
 
 # Code Style
-- Use **consistent indentation** (tabs or 4 spaces, just don’t mix them).
-- Keep variable and function names **clear and descriptive**. You don't wanna guess what a function does for 10min.
-- Use `camelCase` or `snake_case` for variables and functions, `ALL_CAPS` for macros and defines.
-- Comments: explain *why*, not *what*. The code already shows *what* it does. At most, dedicate a sentence to what the function does at the top.
-- Don’t leave commented out blocks of old code lying around, use Git revisions for history.
+* **Indentation**: Use 4 spaces. Do not use tabs.
+* **Naming**: Use `camelCase` or `snake_case` for variables/functions. Use `ALL_CAPS` for macros and `#defines`.
+* **Clarity**: Variable names should be descriptive (e.g., `apps_throttle_percentage` not `atp`).
+* **Comments**: Explain the **why**, not the **what**. Assume the reader knows C/C++, but doesn't know your specific logic.
 
-# Development Practices 
-- Always build and test before pushing.
-- Don’t commit binaries, build outputs, or local configs, add them to `.gitignore`. This breaks compilation for other people, keep that in mind.
-- Document any new module or hardware interface in [docs](.).
-- Keep code portable where possible, avoid using chip specific stuff in common code.
-- If you’re touching multiple areas, **open a draft Pull Request** (PR) early so others can see progress.
+# Development Practices
+* **CI/CD Compliance**: Your code **must** pass the Ceedling unit tests in GitHub Actions before a PR can be merged.
+* **No Binaries**: Never commit `.bin`, `.hex`, `.o`, or `.elf` files. These belong in GitHub **Releases**.
+* **Draft PRs**: Open a Draft PR early in the process. It acts as a signal to the team that you are working on a specific module.
+* **Portability**: Keep board-specific HAL code isolated from logic. Logic should be testable on a PC via Ceedling.
 
-# Reviews & Versioning
-- Get another person to review critical code (especially safety-related stuff).
-- Keep a short changelog or version tag for each major firmware update.
-- Write clear commit messages, “nakaz mare whatever 123" is not clear I think.
-- **Work in separate branches that will be merged into master by a responsible**
+### Reviews & Releases
+* **Peer Review**: All PRs require at least one approval from a subteam lead.
+* **Releases**: When a version is flashed onto the car for testing or competition, it must be tagged (e.g., `v1.0.2`) and a GitHub Release created with the compiled binary attached.
+* **Main Branch**: The `main` branch is for "Car-Ready" code only. It should always be in a state that is safe to run.
 
-# Branch Naming 🤯
-To keep the repository organized, follow this format for branch names:
-| Type | Description | Example |
-|------|--------------|----------|
-| `feature/` | For new features or modules | `feature/can-flashing` |
-| `bugfix/` | For fixing specific bugs | `bugfix/telemetry-crash` |
-| `hotfix/` | For urgent fixes that need to go directly to `main` | `hotfix/build-failure` |
-| `refactor/` | For restructuring or cleaning up code without new features | `refactor/common-drivers` |
-| `docs/` | For documentation-only changes | `docs/add-coding-guidelines` |
-| `test/` | For experimental or temporary testing | `test/add-GI-test` |
-
-Example: docs/project-structure
-
-
-# About Using AI Tools
-- You *can* use AI to speed up coding, but **don’t trust it blindly** *please*.
-- Always check and understand what it outputs before committing.
-- If something looks off, test it or ask for a second opinion.
-- AI is a tool, not a substitute for knowing what your code actually does.
-- Don't automatically accept changes, try to keep agents at a minimum. You'd be surprised how many times they make the code not compile from 5 different files.
-
+### About Using AI Tools
+* **Verification**: AI is a tool, but you should use it with caution. It can hallucinate like hell and mess up the whole codebase.
+* **Compilation**: Ensure AI hasn't hallucinated functions or broken cross-file dependencies.
+* **Logic Check**: If you don't understand what the AI wrote, do not merge it.
 
 <pre align="center">
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣤⣄⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⠀⠀⠀⠀⠀
