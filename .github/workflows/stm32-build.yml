@@ -4,7 +4,6 @@ on:
   workflow_call:
     inputs:
       run_reviewdog:
-        description: 'Run Reviewdog linters (cppcheck/gcc)'
         required: false
         type: boolean
         default: false
@@ -13,9 +12,9 @@ jobs:
   build:
     name: CMake Compile
     runs-on: ubuntu-latest
+    # Using a verified, existing image for firmware development
     container:
-      # This is a very stable image used for STM32 CI
-      image: ghcr.io/stefanct/stm32-build:latest
+      image: docker.io/akospasztor/docker-gcc-arm:latest
 
     steps:
       - name: Checkout repository
@@ -23,64 +22,41 @@ jobs:
         with:
           submodules: recursive 
 
-      - name: Install Build Tools & Linters
-        # Since the Docker image is slim, we grab Ninja and Cppcheck.
-        # This is much faster because we don't have to install the 500MB compiler.
+      - name: Install Cppcheck
+        # CMake and Ninja are already in this image! 
+        # We just need the linter.
         run: |
-          apt-get update
-          apt-get install -y ninja-build cppcheck
+          apt-get update -qq
+          apt-get install -y cppcheck
 
       - name: Configure CMake
         run: |
+          # The toolchain path is usually /usr/bin or /opt/gcc... 
+          # This image handles the PATH automatically.
           cmake -B build -G Ninja \
-            -DCMAKE_MAKE_PROGRAM=$(which ninja) \
-            -DCMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE/cmake/gcc-arm-none-eabi.cmake \
+            -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
       - name: Compile Project
         run: cmake --build build
 
-      - name: Upload Firmware Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: stm32-firmware
-          path: |
-            build/**/*.elf
-            build/**/*.bin
-            build/**/*.map
-          if-no-files-found: warn
-
-      # --- REVIEWDOG STEPS ---
-
       - name: Setup Reviewdog
         if: ${{ inputs.run_reviewdog }}
         uses: reviewdog/action-setup@v1
-        with:
-          reviewdog_version: latest
 
       - name: Run Cppcheck via Reviewdog
         if: ${{ inputs.run_reviewdog }}
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            REPORTER="github-pr-review"
-          else
-            REPORTER="github-check"
-          fi
-
+          REPORTER=$([[ "${{ github.event_name }}" == "pull_request" ]] && echo "github-pr-review" || echo "github-check")
+          
           JSON_PATH=$(find build -name compile_commands.json)
-
-          # Find HAL and CMSIS driver folders to ignore them (Universal wildcards)
           IGNORE_ARGS=$(find Drivers -maxdepth 1 -type d \( -name "*_HAL_Driver" -o -name "CMSIS" \) -printf "-i %p ")
           
-          echo "Ignoring vendor libraries: $IGNORE_ARGS"
-
-          cppcheck --project="$JSON_PATH" \
-            $IGNORE_ARGS \
-            --enable=warning,performance,portability \
-            --inline-suppr \
-            --max-ctu-depth=2 \
-            -j 2 2>&1 | \
+          # Parallelized scan with a depth limit to prevent hangs
+          cppcheck --project="$JSON_PATH" $IGNORE_ARGS \
+            --enable=warning,performance,portability --inline-suppr \
+            --max-ctu-depth=2 -j 2 2>&1 | \
           reviewdog -efm="%f:%l:%c: %m" -efm="%f:%l: %m" -name="cppcheck" -reporter=$REPORTER -level=warning
