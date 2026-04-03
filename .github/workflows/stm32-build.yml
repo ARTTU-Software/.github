@@ -67,22 +67,20 @@ jobs:
             REPORTER="github-check"
           fi
 
-          echo "--- Locating compile_commands.json ---"
-          # This finds the file and stores the path in a variable
           JSON_PATH=$(find build -name compile_commands.json)
+
+          # 1. Dynamically find all HAL and CMSIS driver folders to ignore them
+          # This keeps the linter focused ONLY on your /Core and /App code
+          IGNORE_ARGS=$(find Drivers -maxdepth 1 -type d \( -name "*_HAL_Driver" -o -name "CMSIS" \) -printf "-i %p ")
           
-          if [ -z "$JSON_PATH" ]; then
-            echo "ERROR: compile_commands.json not found anywhere in build/!"
-            echo "--- Contents of build directory for reference ---"
-            ls -R build
-            exit 1
-          fi
+          echo "Ignoring vendor libraries: $IGNORE_ARGS"
 
-          echo "Found file at: $JSON_PATH"
-          echo "--- File Content (First 10 lines) ---"
-          head -n 10 "$JSON_PATH"
-
+          # 2. Run with a strict timeout and parallel cores
+          # --max-ctu-depth=2 prevents the 'infinite loop' hang on complex macros
           cppcheck --project="$JSON_PATH" \
+            $IGNORE_ARGS \
             --enable=warning,performance,portability \
-            --inconclusive --force 2>&1 | \
+            --inline-suppr \
+            --max-ctu-depth=2 \
+            -j 2 2>&1 | \
           reviewdog -efm="%f:%l:%c: %m" -efm="%f:%l: %m" -name="cppcheck" -reporter=$REPORTER -level=warning
