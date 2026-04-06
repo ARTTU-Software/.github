@@ -1,0 +1,48 @@
+name: STM32 Clang-Tidy Linter
+
+on:
+  workflow_call:
+    inputs:
+      artifact_name:
+        description: 'Name of the artifact containing compile_commands.json'
+        required: false
+        type: string
+        default: 'stm32-artifacts'
+
+jobs:
+  lint:
+    name: Clang-Tidy Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Download Build Database
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: build
+
+      - name: Run Clang-Tidy Static Analysis
+        uses: cpp-linter/cpp-linter-action@v2
+        id: linter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          database: 'build'
+          style: 'file'
+          
+          tidy-checks: '-*,bugprone-*,clang-analyzer-*,performance-*,misc-*,cert-*'
+          
+          tidy-review: true
+          format-review: true
+          
+          thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
+          
+          extra-args: '-target arm-none-eabi'
