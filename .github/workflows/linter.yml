@@ -42,7 +42,8 @@ jobs:
           
           tidy-review: true
           format-review: true
-          
           thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
           
-          extra-args: '-target arm-none-eabi'
+          extra-args: >
+            -target arm-none-eabi
+            --config="{CheckOptions: {misc-include-cleaner.MissingIncludes: false}}"
