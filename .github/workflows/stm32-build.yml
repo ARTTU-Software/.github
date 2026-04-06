@@ -2,12 +2,6 @@ name: STM32 Build Template
 
 on:
   workflow_call:
-    inputs:
-      run_reviewdog:
-        description: 'Run Reviewdog linters (cppcheck/gcc)'
-        required: false
-        type: boolean
-        default: false
 
 jobs:
   build:
@@ -24,8 +18,14 @@ jobs:
         with:
           release: 'latest'
 
-      - name: Install Build Tools & Linters
-        run: sudo apt-get install -y ninja-build cppcheck
+      - name: Install Build Tools
+        run: sudo apt-get install -y ninja-build
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          # This key ensures the cache is shared across runs of the same OS
+          key: ${{ runner.os }}-stm32-ccache
 
       - name: Configure CMake
         run: |
@@ -33,7 +33,10 @@ jobs:
             -DCMAKE_MAKE_PROGRAM=$(which ninja) \
             -DCMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE/cmake/gcc-arm-none-eabi.cmake \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DFIRMWARE_VERSION="${{ github.ref_name }}"
 
       - name: Compile Project
         run: cmake --build build
