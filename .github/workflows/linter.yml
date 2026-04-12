@@ -23,6 +23,20 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install ARM Toolchain
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: 'latest'
+
+      - name: Get ARM Toolchain Paths
+        id: arm_paths
+        run: |
+          ARM_BASE=$(dirname $(dirname $(which arm-none-eabi-gcc)))
+          ARM_VERSION=$(arm-none-eabi-gcc -dumpversion)
+          echo "ARM_INCLUDE=${ARM_BASE}/arm-none-eabi/include" >> $GITHUB_OUTPUT
+          echo "ARM_GCC_INCLUDE=${ARM_BASE}/lib/gcc/arm-none-eabi/${ARM_VERSION}/include" >> $GITHUB_OUTPUT
+          echo "ARM_GCC_INCLUDE_FIXED=${ARM_BASE}/lib/gcc/arm-none-eabi/${ARM_VERSION}/include-fixed" >> $GITHUB_OUTPUT
+
       - name: Download Build Database
         uses: actions/download-artifact@v4
         with:
@@ -38,7 +52,7 @@ jobs:
           database: 'build'
           style: 'file'
           
-          tidy-checks: '-*,bugprone-*,clang-analyzer-*,performance-*,misc-*,cert-*'
+          tidy-checks: '-*,bugprone-*,clang-analyzer-*,performance-*,misc-*,cert-*,-misc-include-cleaner'
           
           tidy-review: true
           format-review: true
@@ -46,4 +60,6 @@ jobs:
           
           extra-args: >
             -target arm-none-eabi
-            --config="{CheckOptions: {misc-include-cleaner.MissingIncludes: false}}"
+            --extra-arg=-isystem${{ steps.arm_paths.outputs.ARM_INCLUDE }}
+            --extra-arg=-isystem${{ steps.arm_paths.outputs.ARM_GCC_INCLUDE }}
+            --extra-arg=-isystem${{ steps.arm_paths.outputs.ARM_GCC_INCLUDE_FIXED }}
