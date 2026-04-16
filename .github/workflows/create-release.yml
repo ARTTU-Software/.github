@@ -4,25 +4,27 @@ on:
   workflow_call:
     inputs:
       artifact_name:
-        description: 'Name of the build artifact to download'
+        description: 'Name of the build artifact to download (leave empty if none)'
         required: false
         type: string
-        default: 'stm32-artifacts'
+        default: ''
 
 jobs:
   release:
     name: Generate Release & Attach Artifacts
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write 
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 
 
+      # runs only if an artifact name is provided, otherwise it skips this step
       - name: Download Build Artifacts
+        if: ${{ inputs.artifact_name != '' }}
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.artifact_name }}
@@ -32,6 +34,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          fail_on_unmatched_files: false # dont fail if no files match, since artifact is optional
           files: |
             build-artifacts/**/*.bin
             build-artifacts/**/*.elf
