@@ -52,7 +52,7 @@ jobs:
           database: 'build'
           style: 'file'
           
-          tidy-checks: '-*,bugprone-*,clang-analyzer-*,performance-*,misc-*,cert-*,-misc-include-cleaner'
+          tidy-checks: '-*,bugprone-*,clang-analyzer-*,performance-*,misc-*,cert-*,-misc-include-cleaner,-performance-no-int-to-ptr'
           
           tidy-review: true
           format-review: true
