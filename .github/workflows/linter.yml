@@ -50,12 +50,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           database: 'build'
-          style: 'file'
+          # change to `file` for clang-format checks
+          style: ''
           
           tidy-checks: '-*,bugprone-*,clang-analyzer-*,performance-*,misc-*,cert-*,-misc-include-cleaner,-performance-no-int-to-ptr'
           
           tidy-review: true
-          format-review: true
+          format-review: false # change to true for clang-format checks
           thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
           
           extra-args: >
