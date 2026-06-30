@@ -39,3 +39,14 @@ jobs:
             build-artifacts/**/*.bin
             build-artifacts/**/*.elf
             build-artifacts/**/*.map
+
+      # ==========================================
+      # Notify the documentation repo to rebuild & redeploy
+      - name: Notify documentation
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.DOCS_DISPATCH_TOKEN }}
+          repository: ARTTU-Software/documentation
+          event-type: docs-release
+          client-payload: |
+            {"repo":"${{ github.event.repository.name }}","tag":"${{ github.ref_name }}"}
