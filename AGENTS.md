@@ -13,6 +13,8 @@ Distributed multi-ECU automotive architecture (STM32 Cortex-M MCUs) communicatin
 | **Trace Call Graph** | `trace_path(function_name="<func>", direction="inbound"|"outbound")` | Map callers/callees across tasks, buffers, and ISRs |
 | **Search Code (Compact)** | `search_code(pattern="<name>", mode="compact", project="<proj>")` | Graph-augmented search: signatures + line bounds (~150 tokens) |
 | **Search Graph Symbols** | `search_graph(name_pattern=".*<name>.*", project="<proj>")` | Fast symbol discovery filtered by project/path |
+| **Architecture & Clusters** | `get_architecture(path="<prefix>", aspects=["clusters", "hotspots"], project="<proj>")` | Leiden community detection & de-facto architectural seams |
+| **Verify Impact Radius** | `detect_changes(base_branch="dev", depth=2, project="<proj>")` | Transitive impact analysis of modified symbols before commit |
 | **Run All Unit Tests** | `ceedling test:all` | Mandatory verification before every commit/PR |
 | **Run Single Module Test** | `ceedling test:<module>` | Fast iteration (e.g. `ceedling test:moving_avg`) |
 | **Create Pull Request** | `gh pr create --base dev --title "<title>" --body-file "<file>"` | Non-interactive PR creation (requires `--base dev`) |
@@ -21,17 +23,20 @@ Distributed multi-ECU automotive architecture (STM32 Cortex-M MCUs) communicatin
 
 **Step 0 (Mandatory)**: Before starting ANY code task, immediately load both [arttu-code-discovery](.agents/skills/arttu-code-discovery/SKILL.md) and [arttu-cstyle](.agents/skills/arttu-cstyle/SKILL.md).
 
-Follow this prescriptive 3-step sequence before inspecting raw code or modifying any firmware module:
+Follow this prescriptive 4-step sequence before inspecting raw code or modifying any firmware module:
 
-1. **Step 1: Specification & Architecture Check (`markdown-docs`)**
-   * Call `search_docs(directory="<REPO_PATH>/docs", query="<module>")` using the absolute path to the repository `docs/` folder.
-   * Verify hardware constraints and physical pinout assignments before inspecting or changing code.
-2. **Step 2: Impact & Call-Graph Analysis (`codebase-memory-mcp`)**
+1. **Step 1: Specification & Architecture Check (`markdown-docs` + `get_architecture`)**
+   * Call `search_docs(directory="<REPO_PATH>/docs", query="<module>")` using the absolute path to the repository `docs/` folder to verify pinouts, CAN IDs, and hardware specs.
+   * Call `get_architecture(path="Core/Src/App", aspects=["clusters", "hotspots"])` to view de-facto architectural seams, module clusters, and communication hubs without file reads.
+2. **Step 2: Subsystem Mapping & Hybrid Search (`query_graph` + `search_code`)**
+   * For whole-folder or subsystem mapping, run `query_graph` to extract the degree-ranked function skeleton in ~200 tokens (Recipe F in `arttu-code-discovery`).
+   * For specific identifiers or types, use `search_code(pattern="<name>", mode="compact")` or `search_graph` to locate containing functions and line ranges in ~150 tokens.
+3. **Step 3: Impact & Dataflow Analysis (`codebase-memory-mcp`)**
    * If the project is not listed in `list_projects` or returns `Project not found`, run auto-indexing immediately: `index_repository(repo_path=".", mode="full")`.
    * Trace callers and callees (`trace_path` with `direction="inbound"` or `"outbound"`) on any function or shared buffer to map all producers, consumers, and ISR boundaries.
-3. **Step 3: Hybrid Semantic Direct Fetching (`codebase-memory-mcp`)**
-   * **Code & Structural Search**: For functions, types, structs, or callers, use `search_code(pattern="<name>", mode="compact")` or `search_graph`. It gives containing functions and line ranges in ~150 tokens without whole-file scanning.
-   * **Mandatory Symbol Reader**: NEVER read whole source files to inspect a function. ALWAYS call `get_code_snippet(qualified_name="<symbol>")` first. It extracts the exact function implementation, docstrings, and start/end line numbers in ~300 tokens instead of ~5,000 tokens.
+   * For sensor, ADC, or CAN signal flow, use `trace_path` with `mode="data_flow"` to inspect parameter expressions across hops.
+4. **Step 4: Mandatory Symbol Reader (`get_code_snippet`)**
+   * NEVER read whole source files to inspect a function. ALWAYS call `get_code_snippet(qualified_name="<symbol>")` first. It extracts the exact function implementation, docstrings, and start/end line numbers in ~300 tokens instead of ~5,000 tokens.
    * **Targeted Direct Grep (`grep_search`)**: Scope with `SearchPath` specifically for `#define` macros, register bitmasks, error strings, or non-C config files (`CMakeLists.txt`, `project.yml`). Do not grep blindly across the repo for functions or structs.
    * **Windowed Read Rule**: When codebase MCP reading is exhausted or a symbol is unindexed, fall back to windowed `view_file` specifying both `StartLine` and `EndLine` (≤50 lines around the target). NEVER call `view_file` unwindowed on files >100 lines.
 
@@ -59,7 +64,8 @@ Follow this prescriptive 3-step sequence before inspecting raw code or modifying
 
 ### 4. In-Session Verification Gate
 * **Batched Verification**: Do NOT run Ceedling or target builds in a tight loop after every single minor edit. Run verification only at major logical milestones (e.g. after completing a cohesive implementation batch or test suite) and prior to committing/completing the task.
-* Never claim code builds or tests pass without executing the verification command (`ceedling test:all`) and inspecting output.
+* **Pre-Commit Impact Verification**: Before committing or opening a PR, always execute `detect_changes(base_branch="dev", depth=2)` to verify that only intended files were modified and that all downstream impacted symbols are accounted for.
+* **Mandatory Test Execution**: Never claim code builds or tests pass without executing the verification command (`ceedling test:all`) and inspecting output.
 * If tests fail, analyze the assertion failures, apply minimal targeted fixes, and re-test.
 
 ## Multi-Vendor Harness Support

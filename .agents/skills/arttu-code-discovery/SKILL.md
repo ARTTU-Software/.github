@@ -67,17 +67,54 @@ call_mcp_tool(ServerName='codebase-memory-mcp', ToolName='search_code', Argument
   'mode': 'compact'
 })
 
+### Recipe F: Subsystem Degree-Ranked Skeleton Map (query_graph)
+Generate an automated, token-compact repo map of an entire module or folder ranked by fan-in:
+call_mcp_tool(ServerName='codebase-memory-mcp', ToolName='query_graph', Arguments={
+  'project': '<PROJECT_NAME>',
+  'query': "MATCH (f:Function) WHERE f.file_path STARTS WITH 'Core/Src/App/DataProcessing' OPTIONAL MATCH (caller)-[:CALLS]->(f) RETURN f.return_type, f.name, f.signature, count(caller) AS callers ORDER BY callers DESC"
+})
+
+### Recipe G: Signal Dataflow Tracing (trace_path with mode='data_flow')
+Inspect variable and pointer propagation with parameter expressions across hops (e.g. tracking &sensor pointers):
+call_mcp_tool(ServerName='codebase-memory-mcp', ToolName='trace_path', Arguments={
+  'project': '<PROJECT_NAME>',
+  'function_name': 'apply_kalman_to_sensor',
+  'mode': 'data_flow'
+})
+
+### Recipe H: Pre-Commit Impact Analysis (detect_changes)
+Calculate transitive blast radius and list all impacted symbols before committing or creating a PR:
+call_mcp_tool(ServerName='codebase-memory-mcp', ToolName='detect_changes', Arguments={
+  'project': '<PROJECT_NAME>',
+  'base_branch': 'dev',
+  'depth': 2
+})
+
+### Recipe I: Architectural Cluster & Hotspot Map (get_architecture)
+Discover de-facto module clusters via Leiden community detection and high fan-in communication hubs:
+call_mcp_tool(ServerName='codebase-memory-mcp', ToolName='get_architecture', Arguments={
+  'project': '<PROJECT_NAME>',
+  'path': 'Core/Src/App',
+  'aspects': ['clusters', 'hotspots']
+})
+
 ---
 
 ## 3. Prescriptive Discovery Protocol (Hybrid Strategy)
 
-Follow this exact sequence before modifying any existing firmware module:
+Follow this prescriptive 4-step sequence before modifying or designing any firmware module:
 
-1. Step 1 (Specs): Query markdown-docs:search_docs with directory="<REPO_PATH>/docs" (absolute path) for module architectural notes and Mermaid dataflow diagrams.
-2. Step 2 (Impact): Query codebase-memory-mcp:trace_path (inbound) on the symbol to map every caller across tasks, ISRs, and FSM states.
-3. Step 3 (Search & Snippet):
-   - Use search_code(mode="compact") or search_graph to locate functions, structs, and variables with containing line bounds.
-   - ALWAYS call get_code_snippet to inspect the exact function implementation.
+1. Step 1: Specification & Architecture Check (markdown-docs + get_architecture)
+   - Query markdown-docs:search_docs with directory="<REPO_PATH>/docs" (absolute path) for module specs, CAN frame layouts, and pinouts.
+   - Run Recipe I (get_architecture with aspects=['clusters', 'hotspots']) to view de-facto architectural seams and communication hubs without file scanning.
+2. Step 2: Subsystem Mapping & Hybrid Search (query_graph or search_code)
+   - For unfamiliar folders, run Recipe F (query_graph) to extract the entire subsystem's degree-ranked function signatures in one call (~200 tokens).
+   - For specific identifiers or types, run Recipe E (search_code in mode="compact") or Recipe D (search_graph).
+3. Step 3: Call-Graph & Dataflow Impact (trace_path)
+   - Run Recipe A (trace_path inbound) on the target symbol to map all callers across tasks, ISRs, and FSM states.
+   - For sensor, ADC, or CAN signal flow, run Recipe G (trace_path with mode="data_flow") to trace argument expressions across hops.
+4. Step 4: Targeted Symbol Snippet Extraction (get_code_snippet)
+   - ALWAYS call get_code_snippet to inspect the exact function implementation and line bounds (~300 tokens).
    - If codebase MCP reading is exhausted or the symbol is unindexed, fall back to windowed view_file(StartLine, EndLine) (≤50 lines). NEVER read whole source files (>100 lines) unwindowed.
 
 ---
