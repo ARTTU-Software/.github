@@ -9,12 +9,12 @@ Distributed multi-ECU automotive architecture (STM32 Cortex-M MCUs) communicatin
 
 | Action | Command | Scope / Notes |
 | :--- | :--- | :--- |
+| **Inspect Symbol Implementation** | `get_code_snippet(qualified_name="<symbol>", project="<proj>")` | Zero-file-read extraction of function body & line bounds |
+| **Trace Call Graph** | `trace_path(function_name="<func>", direction="inbound"|"outbound")` | Map callers/callees across tasks, buffers, and ISRs |
+| **Search Graph Symbols** | `search_graph(name_pattern=".*<name>.*", project="<proj>")` | Fast symbol discovery filtered by project/path |
 | **Run All Unit Tests** | `ceedling test:all` | Mandatory verification before every commit/PR |
 | **Run Single Module Test** | `ceedling test:<module>` | Fast iteration (e.g. `ceedling test:moving_avg`) |
-| **Clean Test Artifacts** | `ceedling clobber` | Run when mock headers or dependencies get stale |
-| **Build Documentation** | `npm run docs:build` | In `documentation/` directory (VitePress verification) |
 | **Create Pull Request** | `gh pr create --base dev --title "<title>" --body-file "<file>"` | Non-interactive PR creation (requires `--base dev`) |
-| **Check PR CI Status** | `gh pr checks` | Verify remote GitHub Actions workflow passes |
 
 ## Code Discovery & Tool Hierarchy
 
@@ -23,13 +23,14 @@ Distributed multi-ECU automotive architecture (STM32 Cortex-M MCUs) communicatin
 Follow this prescriptive 3-step sequence before inspecting raw code or modifying any firmware module:
 
 1. **Step 1: Specification & Architecture Check (`markdown-docs`)**
-   * Call `search_docs(directory="docs", query="<module>")` to retrieve hardware architecture notes, DMA memory mapping, and Mermaid dataflow diagrams.
+   * Call `search_docs(directory="docs", query="<module>")` to retrieve hardware architecture notes and existing documentation.
    * Verify hardware constraints and physical pinout assignments before inspecting or changing code.
 2. **Step 2: Impact & Call-Graph Analysis (`codebase-memory-mcp`)**
    * If the project is not listed in `list_projects` or returns `Project not found`, run auto-indexing immediately: `index_repository(repo_path=".", mode="full")`.
    * Trace callers and callees (`trace_path` with `direction="inbound"` or `"outbound"`) on any function or shared buffer to map all producers, consumers, and ISR boundaries.
-3. **Step 3: Targeted Inspection (`codebase-memory-mcp` or windowed read)**
-   * Extract exact symbol implementations with `get_code_snippet` without reading raw boilerplate files.
+3. **Step 3: Targeted Inspection (`codebase-memory-mcp:get_code_snippet`)**
+   * **Mandatory Symbol Reader**: NEVER read whole source files to inspect a function. ALWAYS call `get_code_snippet(qualified_name="<symbol>")` first. It extracts the exact function implementation, docstrings, and start/end line numbers in ~300 tokens instead of ~5,000 tokens.
+   * **Windowed Read Rule**: When codebase MCP reading is exhausted or a symbol is unindexed, fall back to windowed `view_file` specifying both `StartLine` and `EndLine` (≤50 lines around the target). NEVER call `view_file` unwindowed on files >100 lines.
    * Only fall back to `ripgrep` (`grep_search`) for exact string literals, `#define` macro values, or non-C config files.
 
 ## Universal Invariants & Guardrails
@@ -44,7 +45,11 @@ Follow this prescriptive 3-step sequence before inspecting raw code or modifying
 * **System Files**: Never edit CMSIS headers (`core_cm*.h`), vendor HAL source, linker scripts (`*.ld`), or startup code (`startup_*.s`) without explicit approval.
 * **Deterministic Allocation**: Zero dynamic memory allocation (`malloc`/`free`) permitted anywhere in runtime code.
 
-### 3. Git & Workflow Hygiene
+### 3. Git & Terminal Hygiene (Compact Output Rule)
+* **Compact Commands Only**: Always invoke commands with flags that restrict output to what is strictly necessary. Never dump thousands of lines of terminal output into context:
+  * **Git**: Use `git log -n 5 --oneline` (never bare `--stat` or large `-n`), `git diff --stat` (or targeted file diffs, never bare repo-wide `git diff`), and `git status -s`.
+  * **Build & Test**: Prefer single-module runs (`ceedling test:<module>`) during development; avoid running verbose build flags or unconstrained recursive logs.
+  * **General**: Never run unconstrained directory trees, recursive finds, or huge log dumps. Pipe or limit outputs (`--limit`, `--summary`, `--oneline`) to preserve context.
 * **Target Branch**: Never push or open PRs directly to `main`. All PRs must target `dev/` using conventional branch prefixes (`feat/`, `fix/`, `refactor/`, `test/`, `docs/`).
 * **Pull Requests via GitHub CLI (`gh`)**: Always create PRs using the GitHub CLI with non-interactive flags (`--base dev`, `--title`, and `--body`/`--body-file`). Never run bare `gh pr create` without arguments, as interactive prompts freeze agent execution. Always verify CI checks pass with `gh pr checks`.
 * **Open Draft PR Early**: Signal work-in-progress before writing substantial code (`--draft`).
