@@ -18,6 +18,9 @@ jobs:
     steps:
       - name: Checkout .github repo
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.SYNC_TOKEN || secrets.DOCS_DISPATCH_TOKEN }}
+          persist-credentials: false
 
       - name: Run GitHub File Sync
         uses: BetaHuhn/repo-file-sync-action@v1
