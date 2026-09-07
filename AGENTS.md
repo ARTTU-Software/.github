@@ -74,10 +74,10 @@ Follow this prescriptive 4-step sequence before inspecting raw code or modifying
 
 ## Multi-Vendor Harness Support
 
-This repository supports three AI agent environments out-of-the-box:
-* **Claude Code**: Native hooks in `.claude/settings.json` automatically intercept reads >350 lines and run Ceedling after file writes.
-* **Codex / Cursor**: Native `.cursor/mcp.json` provides MCP graph navigation with `AGENTS.md` as the unified instruction set.
-* **Antigravity**: Native subagent routing (`Model: 'flash-lite'`) and MCP knowledge graph tools.
+This repository supports all major AI agent environments with native lifecycle hooks and MCP tools out-of-the-box:
+* **Google Antigravity**: Lifecycle hooks in `.agents/hooks.json` intercept bulk reads (>200 lines), block dynamic memory, and protect CubeMX blocks with native protojson IPC (`decision: "deny"|"allow"`).
+* **Claude Code**: Native hooks in `.claude/settings.json` enforce the identical PreToolUse guardrails and post-mutation Ceedling verification via exit codes.
+* **OpenAI Codex CLI & Cursor IDE**: Native hook declarations in `.codex/hooks.json` and `.cursor/hooks.json` wire into the universal pre-tool enforcer.
 
 ## On-Demand Skills Directory
 
