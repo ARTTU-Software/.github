@@ -141,7 +141,7 @@ STM32_Programmer_CLI -c port=SWD mode=HOTPLUG shared -coreReg R0 R1 R2 R3 PC LR 
    ```
 3. Query the SVD without loading the entire 3MB file into context:
    ```bash
-   python -c "import xml.etree.ElementTree as ET; tree = ET.parse(r'C:\ST\STM32CubeCLT_1.18.0\STMicroelectronics_CMSIS_SVD\STM32F405.svd'); print([f.find('name').text for p in tree.iter('peripheral') if p.find('name').text=='CAN1' for r in p.iter('register') if r.find('name').text=='ESR' for f in r.iter('field')])"
+   python -c "import glob, os, xml.etree.ElementTree as ET; svds = glob.glob(r'C:\ST\STM32CubeCLT_*\STMicroelectronics_CMSIS_SVD\STM32F405.svd'); tree = ET.parse(svds[0]) if svds else None; print([f.find('name').text for p in tree.iter('peripheral') if p.find('name').text=='CAN1' for r in p.iter('register') if r.find('name').text=='ESR' for f in r.iter('field')]) if tree else print('SVD not found')"
    ```
 
 ---

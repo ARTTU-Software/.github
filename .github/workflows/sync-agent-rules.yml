@@ -9,6 +9,8 @@ on:
       - 'CLAUDE.md'
       - 'GEMINI.md'
       - '.agents/**'
+      - '.cursor/**'
+      - '.claude/**'
       - '.github/sync.yml'
       - '.github/workflows/sync-agent-rules.yml'
   workflow_dispatch:

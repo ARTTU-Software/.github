@@ -1,4 +1,4 @@
-# AGENTS.md - ARTTU Formula Student
+# AGENTS.md — ARTTU Formula Student
 
 You are building embedded firmware and tooling for **ARTTU Formula Student Racing**. Safety, determinism, and hardware boundary isolation are non-negotiable.
 
@@ -16,13 +16,29 @@ Distributed multi-ECU automotive architecture (STM32 Cortex-M MCUs) communicatin
 | **Create Pull Request** | `gh pr create --base dev --title "<title>" --body-file "<file>"` | Non-interactive PR creation (requires `--base dev`) |
 | **Check PR CI Status** | `gh pr checks` | Verify remote GitHub Actions workflow passes |
 
+## Code Discovery & Tool Hierarchy
+
+Follow this priority order when exploring, navigating, or searching the codebase:
+
+1. **`codebase-memory-mcp` (Priority 1: Architecture & Call Graphs)**
+   * Trace callers, callees, definitions, and symbol references (`search_graph`, `trace_path`, `get_code_snippet`, `query_graph`).
+   * Prefer graph discovery over traversing raw source trees.
+2. **`markdown-docs` (Priority 1: Vehicle & Hardware Specs)**
+   * Retrieve pinouts, CAN DBC definitions, ECU architectures, and engineering documentation (`search_docs`, `get_section`, `find_code_blocks`).
+   * Consult specs before changing driver or application interfaces.
+3. **`grep_search` / `ripgrep` (Priority 2: Fast Text & Token Matching)**
+   * Fast matching for exact string literals, log/error messages, `#define` macro values, and non-C files (YAML, JSON, CMakeLists).
+4. **Targeted Inspection & Subagent Delegation**
+   * Inspect code in focused windowed slices (`StartLine`/`EndLine`).
+   * In Antigravity, delegate broad exploration tasks to subagents (`Model: 'flash'` or `'flash_lite'`) to preserve lead agent context.
+
 ## Universal Invariants & Guardrails
 
 ### 1. Requirements & Ambiguity
 * If requirements, pinouts, timing budgets, or CAN IDs are ambiguous, **STOP and run `/grill-me`** (or ask clarifying questions) to interview the developer before writing code.
 * Keep changes minimal and atomic (<100 lines per logical step). Never refactor unrelated files or change project formatting.
 
-### 2. File & Memory Boundaries
+### 2. File Boundaries
 * **CubeMX Generated Code**: In CubeMX files (`main.c`, `stm32g4xx_it.c`), **never** place code outside `/* USER CODE BEGIN <x> */` and `/* USER CODE END <x> */` blocks. Unmarked code is destroyed on `.ioc` regeneration.
 * **HAL Isolation**: Hardware abstraction layer calls (`HAL_*`, direct peripheral registers) belong strictly in `bsp/` and `drivers/`. Application code must remain hardware-agnostic.
 * **System Files**: Never edit CMSIS headers (`core_cm*.h`), vendor HAL source, linker scripts (`*.ld`), or startup code (`startup_*.s`) without explicit approval.
@@ -34,9 +50,17 @@ Distributed multi-ECU automotive architecture (STM32 Cortex-M MCUs) communicatin
 * **Open Draft PR Early**: Signal work-in-progress before writing substantial code (`--draft`).
 * **No Binaries**: Never commit compiled artifacts (`.bin`, `.hex`, `.elf`, `.o`, `.a`).
 
-### 4. Verification Gate
+### 4. In-Session Verification Gate
 * Every code modification must compile and pass unit tests with Ceedling (`ceedling test:all`) prior to committing.
 * Never claim code builds or tests pass without executing the verification command and inspecting output.
+* If tests fail, analyze the assertion failures, apply minimal targeted fixes, and re-test.
+
+## Multi-Vendor Harness Support
+
+This repository supports three AI agent environments out-of-the-box:
+* **Claude Code**: Native hooks in `.claude/settings.json` automatically intercept reads >350 lines and run Ceedling after file writes.
+* **Codex / Cursor**: Native `.cursor/mcp.json` provides MCP graph navigation with `AGENTS.md` as the unified instruction set.
+* **Antigravity**: Native subagent routing (`Model: 'flash-lite'`) and MCP knowledge graph tools.
 
 ## On-Demand Skills Directory
 

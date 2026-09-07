@@ -32,8 +32,9 @@ If no directory is discovered:
    > "The ARTTU vehicle documentation is needed to verify CAN IDs, pinouts, and hardware specs. May I clone the repository (~5 MB) to `~/.arttu/documentation` (or your preferred path)?"
 3. Upon confirmation, execute non-interactively:
    ```bash
-   GIT_TERMINAL_PROMPT=0 git clone git@github.com:ARTTU-Software/documentation.git "<TARGET_PATH>" || \
-   GIT_TERMINAL_PROMPT=0 git clone https://github.com/ARTTU-Software/documentation.git "<TARGET_PATH>"
+   # Cross-platform non-interactive clone (Linux, macOS, and Windows PowerShell/CMD):
+   git -c core.askPass= clone git@github.com:ARTTU-Software/documentation.git "<TARGET_PATH>" || \
+   git -c core.askPass= clone https://github.com/ARTTU-Software/documentation.git "<TARGET_PATH>"
    ```
 4. If authentication fails, inform the user to configure SSH keys or GitHub CLI auth (`gh auth login`).
 
