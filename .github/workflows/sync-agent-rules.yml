@@ -22,34 +22,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Resolve PAT & Verify
+      - name: Resolve PAT
         id: auth
         run: |
           TOKEN="${{ secrets.SYNC_TOKEN }}"
-          SRC="SYNC_TOKEN"
           if [ -z "$TOKEN" ]; then
             TOKEN="${{ secrets.DOCS_DISPATCH_TOKEN }}"
-            SRC="DOCS_DISPATCH_TOKEN"
           fi
-          echo "Using secret source: $SRC"
-          echo "Token character count: ${#TOKEN}"
-          echo "Token prefix: ${TOKEN:0:4}"
-          echo "Token suffix: ${TOKEN: -4}"
-          echo "::add-mask::$TOKEN"
           echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
-
-          echo "Testing GitHub API authorization with $SRC..."
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token $TOKEN" https://api.github.com/user)
-          echo "API Test status: $HTTP_CODE"
-
-          echo "Testing Git Clone authorization with $SRC..."
-          GIT_CURL_VERBOSE=1 git clone --depth 1 --branch "main" "https://x-access-token:${TOKEN}@github.com/ARTTU-Software/STM32-Template.git" test-clone || true
-          if [ -d "test-clone" ]; then
-            echo "Test clone SUCCEEDED!"
-            rm -rf test-clone
-          else
-            echo "Test clone FAILED!"
-          fi
 
       - name: Run GitHub File Sync
         uses: BetaHuhn/repo-file-sync-action@v1
