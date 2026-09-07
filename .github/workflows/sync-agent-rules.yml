@@ -10,6 +10,7 @@ on:
       - 'GEMINI.md'
       - '.agents/**'
       - '.github/sync.yml'
+      - '.github/workflows/sync-agent-rules.yml'
   workflow_dispatch:
 
 jobs:
