@@ -10,11 +10,12 @@ Distributed multi-ECU automotive architecture (STM32 Cortex-M MCUs) communicatin
 | Action | Command | Scope / Notes |
 | :--- | :--- | :--- |
 | **Inspect Symbol Implementation** | `get_code_snippet(qualified_name="<symbol>", project="<proj>")` | Zero-file-read extraction of function body & line bounds |
+| **Trace Shared Buffer / Variable** | `trace_path(function_name="<var>", edge_types=["WRITES"|"USAGE"])` | Map all writers & readers of DMA buffers, flags, and arrays |
 | **Trace Call Graph** | `trace_path(function_name="<func>", direction="inbound"|"outbound")` | Map callers/callees across tasks, buffers, and ISRs |
 | **Search Code (Compact)** | `search_code(pattern="<name>", mode="compact", project="<proj>")` | Graph-augmented search: signatures + line bounds (~150 tokens) |
-| **Search Graph Symbols** | `search_graph(name_pattern=".*<name>.*", project="<proj>")` | Fast symbol discovery filtered by project/path |
-| **Architecture & Clusters** | `get_architecture(path="<prefix>", aspects=["clusters", "hotspots"], project="<proj>")` | Leiden community detection & de-facto architectural seams |
+| **Search Graph Symbols** | `search_graph(name_pattern=".*<name>.*", file_pattern="Core/**")` | Scoped discovery by label (`Variable`, `Field`, `Macro`) |
 | **Verify Impact Radius** | `detect_changes(base_branch="dev", depth=2, project="<proj>")` | Transitive impact analysis of modified symbols before commit |
+| **Architecture & Clusters** | `get_architecture(path="<prefix>", aspects=["clusters", "hotspots"])` | Leiden community detection & de-facto architectural seams |
 | **Run All Unit Tests** | `ceedling test:all` | Mandatory verification before every commit/PR |
 | **Run Single Module Test** | `ceedling test:<module>` | Fast iteration (e.g. `ceedling test:moving_avg`) |
 | **Create Pull Request** | `gh pr create --base dev --title "<title>" --body-file "<file>"` | Non-interactive PR creation (requires `--base dev`) |
@@ -29,16 +30,19 @@ Follow this prescriptive 4-step sequence before inspecting raw code or modifying
    * Call `search_docs(directory="<REPO_PATH>/docs", query="<module>")` using the absolute path to the repository `docs/` folder to verify pinouts, CAN IDs, and hardware specs.
    * Call `get_architecture(path="Core/Src/App", aspects=["clusters", "hotspots"])` to view de-facto architectural seams, module clusters, and communication hubs without file reads.
 2. **Step 2: Subsystem Mapping & Hybrid Search (`query_graph` + `search_code`)**
-   * For whole-folder or subsystem mapping, run `query_graph` to extract the degree-ranked function skeleton in ~200 tokens (Recipe F in `arttu-code-discovery`).
-   * For specific identifiers or types, use `search_code(pattern="<name>", mode="compact")` or `search_graph` to locate containing functions and line ranges in ~150 tokens.
+   * For whole-folder or subsystem mapping, run `query_graph` to extract the degree-ranked function skeleton in ~200 tokens (Recipe G in `arttu-code-discovery`).
+   * For specific identifiers, variables, or types, use `search_code(pattern="<name>", mode="compact")` or `search_graph` scoped by label.
 3. **Step 3: Impact & Dataflow Analysis (`codebase-memory-mcp`)**
    * If the project is not listed in `list_projects` or returns `Project not found`, run auto-indexing immediately: `index_repository(repo_path=".", mode="full")`.
-   * Trace callers and callees (`trace_path` with `direction="inbound"` or `"outbound"`) on any function or shared buffer to map all producers, consumers, and ISR boundaries.
+   * For shared buffers, arrays, or flags, run `trace_path(function_name="<var>", edge_types=["WRITES", "USAGE"])` to identify all producers and consumers across tasks and ISRs.
+   * Trace function callers and callees (`trace_path` with `direction="inbound"` or `"outbound"`).
    * For sensor, ADC, or CAN signal flow, use `trace_path` with `mode="data_flow"` to inspect parameter expressions across hops.
 4. **Step 4: Mandatory Symbol Reader (`get_code_snippet`)**
    * NEVER read whole source files to inspect a function. ALWAYS call `get_code_snippet(qualified_name="<symbol>")` first. It extracts the exact function implementation, docstrings, and start/end line numbers in ~300 tokens instead of ~5,000 tokens.
-   * **Targeted Direct Grep (`grep_search`)**: Scope with `SearchPath` specifically for `#define` macros, register bitmasks, error strings, or non-C config files (`CMakeLists.txt`, `project.yml`). Do not grep blindly across the repo for functions or structs.
-   * **Windowed Read Rule**: When codebase MCP reading is exhausted or a symbol is unindexed, fall back to windowed `view_file` specifying both `StartLine` and `EndLine` (≤50 lines around the target). NEVER call `view_file` unwindowed on files >100 lines.
+   * **Targeted Direct Grep (`grep_search`)**: Scope with `SearchPath` specifically for `#define` macros, register bitmasks, error strings, or non-C config files (`CMakeLists.txt`, `project.yml`). Do not grep blindly across the repo for functions, structs, or variables.
+   * **Windowed Read Rule**:
+     * Small cohesive files (≤200 lines, e.g. headers, test files, configs): Full-file view permitted in a single call.
+     * Large files (>200 lines): Windowed reading (≤100 lines) or `get_code_snippet` is strictly mandatory. NEVER dump large files unwindowed.
 
 ## Universal Invariants & Guardrails
 
