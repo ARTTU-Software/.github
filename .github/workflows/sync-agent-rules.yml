@@ -11,6 +11,7 @@ on:
       - '.agents/**'
       - '.cursor/**'
       - '.claude/**'
+      - 'PULL_REQUEST_TEMPLATE.md'
       - '.github/sync.yml'
       - '.github/workflows/sync-agent-rules.yml'
   workflow_dispatch:

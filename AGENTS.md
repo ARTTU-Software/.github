@@ -1,9 +1,9 @@
-# AGENTS.md — ARTTU Formula Student
+# AGENTS.md - ARTTU Formula Student
 
-You are building embedded firmware and tooling for **ARTTU Formula Student Racing**. Safety, determinism, and hardware boundary isolation are non-negotiable.
+You are building embedded firmware and tooling for **ARTTU Formula Student**. Safety, determinism, and hardware boundary isolation are non-negotiable.
 
 ## Architecture
-Distributed multi-ECU automotive architecture (STM32 Cortex-M MCUs) communicating over Classic CAN/FDCAN via central DBC definitions, with state-driven control (FSM) and bare-metal/FreeRTOS deterministic execution.
+Distributed multi-node automotive architecture (STM32 Cortex-M MCUs) communicating over Classic CAN/FDCAN via central DBC definitions, with state-driven control (FSM) and bare-metal/FreeRTOS deterministic execution.
 
 ## Essential Commands
 
@@ -18,16 +18,24 @@ Distributed multi-ECU automotive architecture (STM32 Cortex-M MCUs) communicatin
 
 ## Code Discovery & Tool Hierarchy
 
-Follow this priority order when exploring, navigating, or searching the codebase:
+Follow this priority order when exploring, navigating, or modifying the codebase:
 
+### Mandatory Pre-Edit Discovery Gate (Anti-Shortcut Invariant)
+* **Never skip Priority 1, even if specific file paths or functions are provided in the user prompt.** Prompts frequently identify the symptom location, not the downstream consumers.
+* Before editing any function, shared variable, buffer, or driver interface, you **MUST**:
+  1. Call `codebase-memory-mcp` (`trace_path` / `search_graph`) to map all callers, callees, and consumers across the repository to prevent breaking cross-module contracts.
+  2. Call `markdown-docs` (`search_docs`) to cross-reference physical pinouts, CAN IDs, or ADC/sensor electrical specifications against official vehicle documentation.
+* Only fall back to `ripgrep` (`grep_search` / `rg`) or direct file viewing after verifying callers and specs or if the MCP tools return insufficient results.
+
+### Tool Execution Priority
 1. **`codebase-memory-mcp` (Priority 1: Architecture & Call Graphs)**
    * Trace callers, callees, definitions, and symbol references (`search_graph`, `trace_path`, `get_code_snippet`, `query_graph`).
-   * Prefer graph discovery over traversing raw source trees.
+   * Mandatory before modifying any public function, shared buffer, or driver interface.
 2. **`markdown-docs` (Priority 1: Vehicle & Hardware Specs)**
    * Retrieve pinouts, CAN DBC definitions, ECU architectures, and engineering documentation (`search_docs`, `get_section`, `find_code_blocks`).
    * Consult specs before changing driver or application interfaces.
-3. **`grep_search` / `ripgrep` (Priority 2: Fast Text & Token Matching)**
-   * Fast matching for exact string literals, log/error messages, `#define` macro values, and non-C files (YAML, JSON, CMakeLists).
+3. **`ripgrep` (`grep_search` / `rg`) (Priority 2: Fast Text & Token Matching)**
+   * Fast matching for exact string literals, log/error messages, `#define` macro values, and non-C files (YAML, JSON, CMakeLists). Use ripgrep exclusively; avoid slow or unindexed recursive grep searches.
 4. **Targeted Inspection & Subagent Delegation**
    * Inspect code in focused windowed slices (`StartLine`/`EndLine`).
    * In Antigravity, delegate broad exploration tasks to subagents (`Model: 'flash'` or `'flash_lite'`) to preserve lead agent context.

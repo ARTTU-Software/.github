@@ -1,3 +1,3 @@
-# Guidelines
+# ARTTU Formula Student — Agent Directives
 
-See [AGENTS.md](./AGENTS.md) for ARTTU Formula Student architecture, coding standards, and agent directives.
+Detailed guidelines, architecture, and skill definitions reside in [AGENTS.md](./AGENTS.md). You MUST read and follow `AGENTS.md`.

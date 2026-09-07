@@ -1,6 +1,6 @@
 ---
 name: arttu-docs-assistant
-description: Locate, synchronize, and query ARTTU Formula Student vehicle documentation via the markdown-docs MCP server. Use when answering questions regarding ARTTU CAN IDs, pinouts, board specs, sensor filtering, and subsystem firmware cross-referencing. Do NOT use for generic C/C++ programming (use arttu-cstyle), hardware debugging (use arttu-stm32-debugging), or writing module docs (use arttu-docs-writer).
+description: Locate, synchronize, and query ARTTU Formula Student vehicle documentation via the markdown-docs MCP server. Mandatory pre-edit tool whenever modifying or designing sensor interfaces, DMA ranks, CAN IDs, pinouts, board specs, or subsystem cross-referencing. Do NOT use for generic C/C++ programming (use arttu-cstyle), hardware debugging (use arttu-stm32-debugging), or writing module docs (use arttu-docs-writer).
 compatibility: Requires git CLI, network access for initial clone/pull, and an active markdown-docs MCP server instance.
 ---
 

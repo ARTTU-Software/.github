@@ -14,6 +14,8 @@ group:
         dest: .agents/hooks/
       - source: .agents/skills/
         dest: .agents/skills/
+      - source: PULL_REQUEST_TEMPLATE.md
+        dest: .github/pull_request_template.md
     repos: |
       ARTTU-Software/STM32-Template@main
       ARTTU-Software/CAN-Gateway@dev
