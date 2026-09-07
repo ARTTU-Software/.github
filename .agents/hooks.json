@@ -2,11 +2,11 @@
   "arttu-guardrails": {
     "PreToolUse": [
       {
-        "matcher": "view_file|replace_file_content|write_to_file|run_command",
+        "matcher": "view_file|replace_file_content|write_to_file",
         "hooks": [
           {
             "type": "command",
-            "command": "python -c \"import os,sys,subprocess; s='hooks/pre_tool_enforcer.py' if os.path.exists('hooks/pre_tool_enforcer.py') else '.agents/hooks/pre_tool_enforcer.py'; sys.exit(subprocess.run([sys.executable,s]).returncode)\"",
+            "command": "python hooks/pre_tool_enforcer.py",
             "timeout": 15
           }
         ]

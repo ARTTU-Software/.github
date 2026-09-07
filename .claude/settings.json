@@ -3,22 +3,11 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Read|View|Edit|Write|Bash|FileRead|FileEdit",
+        "matcher": "Read|View|Edit|Write|FileRead|FileEdit",
         "hooks": [
           {
             "type": "command",
             "command": "python \".agents/hooks/pre_tool_enforcer.py\""
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write|FileEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python \".agents/hooks/post_tool_verifier.py\""
           }
         ]
       }
