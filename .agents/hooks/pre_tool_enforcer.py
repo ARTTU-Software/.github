@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 """
-pre_tool_enforcer.py - Deterministic PreToolUse Hook
-Focuses strictly on context protection and code destruction prevention:
-1. Spotify Shunt Gate: Intercepts file reads > 350 lines to prevent context bloat.
-2. STM32CubeMX Guard: Ensures edits to Core/Src and Core/Inc remain inside USER CODE blocks.
-3. Zero Dynamic Memory Guard: Blocks malloc/calloc/free in embedded C/C++ files.
-4. Shell Anti-Freeze: Blocks interactive pagers and unsafe git actions.
+pre_tool_enforcer.py - Universal PreToolUse Deterministic Guardrail Hook
+Supports Google Antigravity, Anthropic Claude Code, OpenAI Codex CLI, and Cursor IDE.
 
-Compatible with Claude Code, Antigravity, Cursor, and CLI harnesses on Windows, macOS, and Linux.
-Standard-library only (Zero external pip dependencies).
+Key Guards:
+1. Context Protection Gate (Shunt): Intercepts bulk file reads > 200 lines to preserve frontier reasoning context.
+2. STM32CubeMX Guard: Ensures edits to Core/Src and Core/Inc remain strictly inside /* USER CODE BEGIN */ and /* USER CODE END */ blocks.
+3. Zero Dynamic Memory Guard: Hard-blocks malloc/calloc/realloc/free in embedded C/C++ files.
+4. Shell Anti-Freeze: Blocks interactive pagers (nano, vim, less, top) and unsafe git actions (pushing directly to main/master, bare gh pr create).
+
+Universal Multi-Harness Protocol:
+- Antigravity: Accepts protojson { "toolCall": { "name": "...", "args": {...} } }, emits { "decision": "allow"|"deny", "reason": "..." } on stdout with exit 0.
+- Claude Code / Codex / Cursor: Accepts { "tool_name": "...", "tool_input": {...} } or { "name": "...", "arguments": {...} }, emits errors to stderr with exit 2, success with exit 0.
+
+Zero external dependencies (Python 3 standard library only).
 """
 import sys
 import json
@@ -16,7 +21,7 @@ import re
 import os
 import urllib.request
 
-LINE_THRESHOLD = 350
+LINE_THRESHOLD = 200
 
 def summarize_via_flash(filepath, lines):
     """Optional Shunt worker: Summarizes large file via Gemini Flash if key is present."""
@@ -63,8 +68,7 @@ def resolve_filepath(args):
     if not raw:
         return ""
     if os.path.isabs(raw):
-        return raw
-    # Resolve relative path using CLAUDE_PROJECT_DIR or current working directory
+        return os.path.normpath(raw)
     base = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
     return os.path.normpath(os.path.join(base, raw))
 
@@ -73,11 +77,10 @@ def check_file_read(args):
     if not filepath or not os.path.isfile(filepath):
         return 0, "Approved."
 
-    # Normalize StartLine / EndLine across Antigravity and Claude Code
+    # Normalize StartLine / EndLine across Antigravity, Claude Code, and Codex
     start_line = args.get("StartLine")
     end_line = args.get("EndLine")
 
-    # Claude Code view_range support: [start, end]
     view_range = args.get("view_range") or args.get("range")
     if isinstance(view_range, (list, tuple)) and len(view_range) == 2:
         start_line = view_range[0]
@@ -86,7 +89,6 @@ def check_file_read(args):
         start_line = int(args.get("offset"))
         end_line = start_line + int(args.get("limit"))
 
-    # Targeted read within threshold is permitted
     if start_line is not None and end_line is not None:
         try:
             span = int(end_line) - int(start_line) + 1
@@ -101,14 +103,13 @@ def check_file_read(args):
 
         total_lines = len(lines)
         if total_lines > LINE_THRESHOLD:
-            # Attempt inline Shunt summarization if API key is present
             summary = summarize_via_flash(filepath, lines)
             if summary:
                 msg = (
                     f"[SHUNT ACTIVE] File '{os.path.basename(filepath)}' has {total_lines} lines (> {LINE_THRESHOLD}).\n"
                     f"Full read intercepted to preserve context tokens. Structured summary:\n\n"
                     f"{summary}\n\n"
-                    f"To view exact lines, use targeted read with line range (<= 350 lines)."
+                    f"To view exact lines, use targeted read with line range (<= {LINE_THRESHOLD} lines)."
                 )
                 return 2, msg
 
@@ -117,9 +118,10 @@ def check_file_read(args):
                 f"File '{os.path.basename(filepath)}' has {total_lines} lines (exceeds {LINE_THRESHOLD}-line threshold).\n"
                 f"Bulk reading entire large files floods frontier reasoning context.\n\n"
                 f"ACTIONS AVAILABLE:\n"
-                f"1. Specify a targeted line range (span <= 350 lines) to read the exact section needed.\n"
-                f"2. Use codebase-memory-mcp to query callers, callees, or symbol definitions.\n"
-                f"3. Delegate inspection to a research subagent with Model: 'flash'."
+                f"1. Use get_code_snippet(qualified_name='<symbol>') for zero-file-read symbol extraction (~150 tokens).\n"
+                f"2. Use targeted windowed read (StartLine / EndLine with span <= {LINE_THRESHOLD} lines).\n"
+                f"3. Use codebase-memory-mcp to query callers, callees, or dataflow.\n"
+                f"4. Delegate broad inspection to a research subagent (Model: 'flash')."
             )
             return 2, msg
     except Exception as e:
@@ -147,9 +149,7 @@ def check_file_mutation(args, tool_name=""):
             )
 
     # Check 2: STM32CubeMX User Code Block Preservation
-    # Code placed outside /* USER CODE BEGIN */ and /* USER CODE END */ is wiped on .ioc regeneration
     if ("Core/Src" in norm_path or "Core/Inc" in norm_path) and os.path.isfile(filepath):
-        # Block full file overwrite on CubeMX files
         if tool_name.lower() in ["write", "write_to_file"]:
             return 2, (
                 f"REJECTED: Overwriting entire CubeMX-generated file '{os.path.basename(filepath)}' is forbidden.\n"
@@ -169,7 +169,6 @@ def is_purely_inside_user_blocks(filepath, args):
     start = args.get("StartLine")
     end = args.get("EndLine")
 
-    # Support Claude Code Edit tool (old_string)
     old_str = args.get("old_string") or args.get("TargetContent")
     if (not start or not end) and old_str:
         try:
@@ -207,16 +206,13 @@ def is_purely_inside_user_blocks(filepath, args):
 def check_shell_command(args):
     cmd = args.get("CommandLine") or args.get("command") or ""
 
-    # Check 1: Interactive Commands that freeze headless agents
     for blocked in ["nano", "vim", "vi", "less", "more", "top", "htop"]:
         if re.search(rf"\b{blocked}\b", cmd):
             return 2, f"REJECTED: Interactive command '{blocked}' freezes headless agent execution."
 
-    # Check 2: Git Main Branch Protection
     if re.search(r"git\s+push.*(\bmain\b|\bmaster\b)", cmd):
         return 2, "REJECTED: Pushing directly to main/master is forbidden. Target dev/ via PR."
 
-    # Check 3: Bare gh pr create
     if re.search(r"\bgh\s+pr\s+create\b", cmd):
         if "--base dev" not in cmd:
             return 2, "REJECTED: Pull requests must explicitly target '--base dev'."
@@ -234,14 +230,30 @@ def main():
     except Exception:
         sys.exit(0)
 
-    tool_name = payload.get("tool_name") or payload.get("name") or ""
-    tool_args = (
-        payload.get("tool_input") or 
-        payload.get("tool_args") or 
-        payload.get("arguments") or 
-        payload.get("parameters") or 
-        {}
-    )
+    # Detect harness environment
+    if "toolCall" in payload:
+        # Google Antigravity protocol
+        harness = "antigravity"
+        tool_call = payload.get("toolCall", {})
+        tool_name = tool_call.get("name", "")
+        tool_args = tool_call.get("args", {})
+    else:
+        # Claude Code / OpenAI Codex / Cursor protocol
+        harness = "cli"
+        tool_name = (
+            payload.get("tool_name") or 
+            payload.get("name") or 
+            payload.get("tool") or 
+            ""
+        )
+        tool_args = (
+            payload.get("tool_input") or 
+            payload.get("tool_args") or 
+            payload.get("arguments") or 
+            payload.get("parameters") or 
+            payload.get("args") or 
+            {}
+        )
 
     code = 0
     msg = "Approved."
@@ -251,14 +263,22 @@ def main():
         code, msg = check_file_read(tool_args)
     elif any(k in t_lower for k in ["write", "edit", "replace"]):
         code, msg = check_file_mutation(tool_args, tool_name)
-    elif any(k in t_lower for k in ["run", "command", "bash", "terminal", "exec"]):
+    elif any(k in t_lower for k in ["run", "command", "bash", "terminal", "exec", "shell"]):
         code, msg = check_shell_command(tool_args)
 
-    if code != 0:
-        sys.stderr.write(msg + "\n")
-        sys.exit(code)
-
-    sys.exit(0)
+    if harness == "antigravity":
+        if code != 0:
+            out = {"decision": "deny", "reason": msg}
+        else:
+            out = {"decision": "allow"}
+        sys.stdout.write(json.dumps(out) + "\n")
+        sys.exit(0)
+    else:
+        # Claude Code, Codex, Cursor
+        if code != 0:
+            sys.stderr.write(msg + "\n")
+            sys.exit(code)
+        sys.exit(0)
 
 if __name__ == "__main__":
     main()
