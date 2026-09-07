@@ -1,50 +1,51 @@
 # ART TU Cluj-Napoca Software Stack
 
-![ART TU 2026 Racecar](https://raw.githubusercontent.com/ARTTU-Software/.github/main/docs/img/art26_racecar.png)
+![ART TU Racecar](https://raw.githubusercontent.com/ARTTU-Software/.github/main/docs/img/arttu_car_banner.png)
 
-Engineering overview for the **ART TU Cluj-Napoca** Formula Student software stack. We design, test, and run the distributed embedded firmware, real-time telemetry, and trackside data analytics powering our electric racecars at the Technical University of Cluj-Napoca.
+Engineering overview for the **ART TU Cluj-Napoca** Formula Student software stack. We design, test, and deploy the distributed embedded firmware, wireless telemetry pipelines, and cloud analytics powering our electric racecar at the Technical University of Cluj-Napoca.
 
 ---
 
-### Architecture Overview
+> [!IMPORTANT]
+> **Repository Access**: All vehicle firmware and telemetry repositories are private. If you want access, please reach out to the software lead or an administrator to request the **Member** team role in the organization.
 
-We use a modular multi-repository architecture. Each major physical board and software subsystem maintains its own repository, communicating over deterministic CAN bus networks using centralized DBC definitions.
+> [!TIP]
+> **Coding Standards**: Review our [**Coding Guidelines**](https://github.com/ARTTU-Software/.github/blob/main/docs/coding_guidelines.md) before opening a Pull Request.
 
-#### Embedded ECUs (STM32 Cortex-M)
-* [**`ECU`**](https://github.com/ARTTU-Software/ECU): Main vehicle control unit. Runs torque demand calculation, APPS/brake implausibility checks, safety interlocks, and inverter CAN control.
-* [**`CAN-Gateway`**](https://github.com/ARTTU-Software/CAN-Gateway): High-speed sensor aggregation. Samples suspension potentiometers, wheel speeds, and steering angle; applies digital filtering and routes packets between CAN domains.
-* [**`Dashboard`**](https://github.com/ARTTU-Software/Dashboard): Cockpit driver interface. Drives the steering wheel display, button matrix, warning indicators, and Ready-to-Drive Sound (RTDS).
-* [**`Telemetry`**](https://github.com/ARTTU-Software/Telemetry): Vehicle wireless gateway. Transmits live telemetry data over Wi-Fi/LTE to pit lane and logs high-rate packets to local storage.
-* [**`Galvanic-Isolator`**](https://github.com/ARTTU-Software/Galvanic-Isolator): High-voltage / low-voltage electrical isolation monitoring and fault signal transmission.
+<details>
+<summary>📋 <b>Quick Review: Firmware Invariants & PR Rules</b></summary>
+
+* **Branch Hygiene**: Never push directly to `main`. Open pull requests from `feat/`, `fix/`, `refactor/`, or `test/` into `dev/`.
+* **Verification Gate**: All C code must compile cleanly and pass Ceedling unit tests (`ceedling test:all`) before review.
+* **Deterministic Allocation**: Zero dynamic memory allocation (`malloc`/`free`) permitted anywhere in runtime code.
+* **Hardware Isolation**: Direct HAL calls belong strictly in driver layers; application logic remains portable and hardware-agnostic.
+* Full details: [docs/coding_guidelines.md](https://github.com/ARTTU-Software/.github/blob/main/docs/coding_guidelines.md).
+</details>
+
+---
+
+### Vehicle Architecture
+
+Our distributed automotive architecture communicates over high-speed CAN networks using centralized DBC definitions:
+
+#### Embedded Control Units (STM32 Cortex-M)
+* [**`ECU`**](https://github.com/ARTTU-Software/ECU): Main vehicle control unit. Runs torque demand calculation, APPS/brake implausibility checks, safety state machine, and inverter CAN control.
+* [**`CAN-Gateway`**](https://github.com/ARTTU-Software/CAN-Gateway): High-speed sensor aggregation (suspension potentiometers, wheel speeds, steering angle, etc.), low-pass digital filtering, CAN message routing, and low-current hardware actuation.
+* [**`Dashboard`**](https://github.com/ARTTU-Software/Dashboard): Cockpit driver interface driving the TFT display and CI indicators.
+* [**`Telemetry`**](https://github.com/ARTTU-Software/Telemetry): Vehicle wireless gateway. Transmits live racecar data directly to the cloud and logs high-rate packets to local storage.
+* [**`Galvanic-Isolator`**](https://github.com/ARTTU-Software/Galvanic-Isolator): Inverter isolation board protecting low-voltage electronics from high-voltage inverter domains.
 * [**`LVSOC-26`**](https://github.com/ARTTU-Software/LVSOC-26): Low-voltage accumulator state-of-charge tracking and power distribution monitoring.
 
 #### Shared Foundations & Infrastructure
-* [**`common`**](https://github.com/ARTTU-Software/common): Central C driver library shared across all firmware boards. Contains CAN abstraction, circular buffers, DSP filters, and math utilities.
+* [**`common`**](https://github.com/ARTTU-Software/common): Central C driver library shared across all firmware boards (CAN abstraction, circular buffers, DSP filters, and math utilities).
 * [**`STM32-Template`**](https://github.com/ARTTU-Software/STM32-Template): Standardized board template pre-configured with STM32CubeMX, FreeRTOS, Ceedling unit tests, and AI coding guardrails.
 * [**`Backend`**](https://github.com/ARTTU-Software/Backend): Pit-side telemetry ingest pipeline, InfluxDB time-series storage, and live Grafana dashboards.
-* [**`utilities`**](https://github.com/ARTTU-Software/utilities): Diagnostic scripts, DBC conversion tools, flashing utilities, and automation scripts.
+* [**`utilities`**](https://github.com/ARTTU-Software/utilities): Diagnostic scripts, DBC conversion tools, flashing utilities, and automation helpers.
 * [**`documentation`**](https://github.com/ARTTU-Software/documentation): Centralized documentation hub built with VitePress covering architecture, wiring, and protocols.
 
 ---
 
-### Contributing & Code Standards
+### External Resources
+* **Getting Started**: [docs.cloud.arttu-formulastudent.ro/getting-started/](https://docs.cloud.arttu-formulastudent.ro/getting-started/)
+* **Team Website**: [arttu.ro](https://arttu.ro)
 
-We enforce rigorous safety and verification standards across all automotive code:
-* **Target Branch**: Never push directly to `main`. Open pull requests against `dev/` using conventional branch prefixes (`feat/`, `fix/`, `refactor/`, `test/`).
-* **Verification**: All embedded C changes must compile cleanly and pass unit tests with Ceedling (`ceedling test:all`) before review.
-* **Deterministic Execution**: Zero dynamic memory allocation (`malloc`/`free`) in runtime code; hardware access strictly isolated to driver layers.
-
-For complete rules, see our [**Coding Guidelines**](https://github.com/ARTTU-Software/.github/blob/main/docs/coding_guidelines.md).
-
----
-
-### Repository Access
-
-> [!NOTE]
-> All vehicle firmware and telemetry repositories are private. If you are a team member looking for access to the private codebase, request the **Member** organization role from the software lead or an administrator.
-
----
-
-### Connect with Us
-* **Website**: [arttu.ro](https://arttu.ro)
-* **Organization Hub**: [ARTTU-Software](https://github.com/ARTTU-Software)
