@@ -59,21 +59,34 @@ call_mcp_tool(ServerName='codebase-memory-mcp', ToolName='search_graph', Argumen
   'file_pattern': 'Core/**'
 })
 
+### Recipe E: Graph-Augmented Search (search_code in Compact Mode)
+Search text patterns with graph deduplication into containing functions and line ranges:
+call_mcp_tool(ServerName='codebase-memory-mcp', ToolName='search_code', Arguments={
+  'project': '<PROJECT_NAME>',
+  'pattern': 'kalman_takasu',
+  'mode': 'compact'
+})
+
 ---
 
-## 3. Prescriptive Discovery Protocol
+## 3. Prescriptive Discovery Protocol (Hybrid Strategy)
 
-Follow this exact 3-step sequence before modifying any existing firmware module:
+Follow this exact sequence before modifying any existing firmware module:
 
 1. Step 1 (Specs): Query markdown-docs:search_docs with directory="<REPO_PATH>/docs" (absolute path) for module architectural notes and Mermaid dataflow diagrams.
 2. Step 2 (Impact): Query codebase-memory-mcp:trace_path (inbound) on the symbol to map every caller across tasks, ISRs, and FSM states.
-3. Step 3 (Snippet): ALWAYS call get_code_snippet to inspect the exact function implementation and obtain line bounds. If codebase MCP reading is exhausted or the symbol is unindexed, fall back to windowed view_file(StartLine, EndLine) (≤50 lines). NEVER read whole source files (>100 lines) unwindowed.
+3. Step 3 (Search & Snippet):
+   - Use search_code(mode="compact") or search_graph to locate functions, structs, and variables with containing line bounds.
+   - ALWAYS call get_code_snippet to inspect the exact function implementation.
+   - If codebase MCP reading is exhausted or the symbol is unindexed, fall back to windowed view_file(StartLine, EndLine) (≤50 lines). NEVER read whole source files (>100 lines) unwindowed.
 
 ---
 
-## 4. When to Fall Back to ripgrep (grep_search)
+## 4. When to Use Targeted Direct Grep (grep_search)
 
-Fall back to grep_search or find_by_name ONLY for:
-- Exact string literals, #define macro values, or error strings.
+Use grep_search with a scoped SearchPath specifically for:
+- Macro definitions (#define) and register bitmasks (e.g. ADC_CR2_ADON).
+- Direct peripheral register manipulation (e.g. ADC1->CR).
+- Exact error messages, log strings, or CAN DBC frame names.
 - Non-C configuration files (project.yml, CMakeLists.txt, *.json).
-- When codebase-memory-mcp returns 0 results for a local symbol.
+Do NOT use grep_search blindly across the entire repo for C functions or structs—use search_code instead.

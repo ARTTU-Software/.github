@@ -11,6 +11,7 @@ Distributed multi-ECU automotive architecture (STM32 Cortex-M MCUs) communicatin
 | :--- | :--- | :--- |
 | **Inspect Symbol Implementation** | `get_code_snippet(qualified_name="<symbol>", project="<proj>")` | Zero-file-read extraction of function body & line bounds |
 | **Trace Call Graph** | `trace_path(function_name="<func>", direction="inbound"|"outbound")` | Map callers/callees across tasks, buffers, and ISRs |
+| **Search Code (Compact)** | `search_code(pattern="<name>", mode="compact", project="<proj>")` | Graph-augmented search: signatures + line bounds (~150 tokens) |
 | **Search Graph Symbols** | `search_graph(name_pattern=".*<name>.*", project="<proj>")` | Fast symbol discovery filtered by project/path |
 | **Run All Unit Tests** | `ceedling test:all` | Mandatory verification before every commit/PR |
 | **Run Single Module Test** | `ceedling test:<module>` | Fast iteration (e.g. `ceedling test:moving_avg`) |
@@ -28,10 +29,11 @@ Follow this prescriptive 3-step sequence before inspecting raw code or modifying
 2. **Step 2: Impact & Call-Graph Analysis (`codebase-memory-mcp`)**
    * If the project is not listed in `list_projects` or returns `Project not found`, run auto-indexing immediately: `index_repository(repo_path=".", mode="full")`.
    * Trace callers and callees (`trace_path` with `direction="inbound"` or `"outbound"`) on any function or shared buffer to map all producers, consumers, and ISR boundaries.
-3. **Step 3: Targeted Inspection (`codebase-memory-mcp:get_code_snippet`)**
+3. **Step 3: Hybrid Semantic Direct Fetching (`codebase-memory-mcp`)**
+   * **Code & Structural Search**: For functions, types, structs, or callers, use `search_code(pattern="<name>", mode="compact")` or `search_graph`. It gives containing functions and line ranges in ~150 tokens without whole-file scanning.
    * **Mandatory Symbol Reader**: NEVER read whole source files to inspect a function. ALWAYS call `get_code_snippet(qualified_name="<symbol>")` first. It extracts the exact function implementation, docstrings, and start/end line numbers in ~300 tokens instead of ~5,000 tokens.
+   * **Targeted Direct Grep (`grep_search`)**: Scope with `SearchPath` specifically for `#define` macros, register bitmasks, error strings, or non-C config files (`CMakeLists.txt`, `project.yml`). Do not grep blindly across the repo for functions or structs.
    * **Windowed Read Rule**: When codebase MCP reading is exhausted or a symbol is unindexed, fall back to windowed `view_file` specifying both `StartLine` and `EndLine` (≤50 lines around the target). NEVER call `view_file` unwindowed on files >100 lines.
-   * Only fall back to `ripgrep` (`grep_search`) for exact string literals, `#define` macro values, or non-C config files.
 
 ## Universal Invariants & Guardrails
 
