@@ -65,7 +65,7 @@ call_mcp_tool(ServerName='codebase-memory-mcp', ToolName='search_graph', Argumen
 
 Follow this exact 3-step sequence before modifying any existing firmware module:
 
-1. Step 1 (Specs): Query markdown-docs:search_docs for module architectural notes and Mermaid dataflow diagrams.
+1. Step 1 (Specs): Query markdown-docs:search_docs with directory="<REPO_PATH>/docs" (absolute path) for module architectural notes and Mermaid dataflow diagrams.
 2. Step 2 (Impact): Query codebase-memory-mcp:trace_path (inbound) on the symbol to map every caller across tasks, ISRs, and FSM states.
 3. Step 3 (Snippet): ALWAYS call get_code_snippet to inspect the exact function implementation and obtain line bounds. If codebase MCP reading is exhausted or the symbol is unindexed, fall back to windowed view_file(StartLine, EndLine) (≤50 lines). NEVER read whole source files (>100 lines) unwindowed.
 

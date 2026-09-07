@@ -23,7 +23,7 @@ Distributed multi-ECU automotive architecture (STM32 Cortex-M MCUs) communicatin
 Follow this prescriptive 3-step sequence before inspecting raw code or modifying any firmware module:
 
 1. **Step 1: Specification & Architecture Check (`markdown-docs`)**
-   * Call `search_docs(directory="docs", query="<module>")` to retrieve hardware architecture notes and existing documentation.
+   * Call `search_docs(directory="<REPO_PATH>/docs", query="<module>")` using the absolute path to the repository `docs/` folder.
    * Verify hardware constraints and physical pinout assignments before inspecting or changing code.
 2. **Step 2: Impact & Call-Graph Analysis (`codebase-memory-mcp`)**
    * If the project is not listed in `list_projects` or returns `Project not found`, run auto-indexing immediately: `index_repository(repo_path=".", mode="full")`.
