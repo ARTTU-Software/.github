@@ -32,11 +32,28 @@ jobs:
           echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
 
       - name: Run GitHub File Sync
+        id: sync
         uses: BetaHuhn/repo-file-sync-action@v1
         with:
           GH_INSTALLATION_TOKEN: ${{ steps.auth.outputs.token }}
           CONFIG_PATH: .github/sync.yml
+          GIT_USERNAME: "github-actions[bot]"
+          GIT_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
           PR_LABELS: |
             automation
             agent-rules
           COMMIT_PREFIX: "chore(agents): "
+
+      - name: Convert PRs to Draft
+        if: steps.sync.outputs.pull_request_urls != ''
+        env:
+          GH_TOKEN: ${{ steps.auth.outputs.token }}
+        run: |
+          echo "Processing PRs: ${{ steps.sync.outputs.pull_request_urls }}"
+          echo '${{ steps.sync.outputs.pull_request_urls }}' | jq -r '.[]?' | while read -r url; do
+            if [ -n "$url" ]; then
+              echo "Ensuring draft status for $url..."
+              gh pr ready "$url" --undo || echo "PR $url could not be converted or is already draft"
+            fi
+          done
+
