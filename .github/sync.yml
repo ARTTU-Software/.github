@@ -1,0 +1,17 @@
+group:
+  - files:
+      - source: AGENTS.md
+        dest: AGENTS.md
+      - source: CLAUDE.md
+        dest: CLAUDE.md
+      - source: GEMINI.md
+        dest: GEMINI.md
+      - source: .agents/skills/
+        dest: .agents/skills/
+    repos: |
+      ARTTU-Software/STM32-Template@dev
+      ARTTU-Software/CANGateway@dev
+      ARTTU-Software/ECU@dev
+      ARTTU-Software/Dashboard@dev
+      ARTTU-Software/Telemetry@dev
+      ARTTU-Software/LVSOC-26@dev
