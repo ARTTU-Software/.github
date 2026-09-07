@@ -1,9 +1,9 @@
-# AGENTS.md - ARTTU Formula Student
+# AGENTS.md — ARTTU Formula Student
 
-You are building embedded firmware and tooling for **ARTTU Formula Student**. Safety, determinism, and hardware boundary isolation are non-negotiable.
+You are building embedded firmware and tooling for **ARTTU Formula Student Racing**. Safety, determinism, and hardware boundary isolation are non-negotiable.
 
 ## Architecture
-Distributed multi-node automotive architecture (STM32 Cortex-M MCUs) communicating over Classic CAN/FDCAN via central DBC definitions, with state-driven control (FSM) and bare-metal/FreeRTOS deterministic execution.
+Distributed multi-ECU automotive architecture (STM32 Cortex-M MCUs) communicating over Classic CAN/FDCAN via central DBC definitions, with state-driven control (FSM) and bare-metal/FreeRTOS deterministic execution.
 
 ## Essential Commands
 
@@ -18,27 +18,19 @@ Distributed multi-node automotive architecture (STM32 Cortex-M MCUs) communicati
 
 ## Code Discovery & Tool Hierarchy
 
-Follow this priority order when exploring, navigating, or modifying the codebase:
+**Step 0 (Mandatory)**: Before starting ANY code task, immediately load both [arttu-code-discovery](.agents/skills/arttu-code-discovery/SKILL.md) and [arttu-cstyle](.agents/skills/arttu-cstyle/SKILL.md).
 
-### Mandatory Pre-Edit Discovery Gate (Anti-Shortcut Invariant)
-* **Never skip Priority 1, even if specific file paths or functions are provided in the user prompt.** Prompts frequently identify the symptom location, not the downstream consumers.
-* Before editing any function, shared variable, buffer, or driver interface, you **MUST**:
-  1. Call `codebase-memory-mcp` (`trace_path` / `search_graph`) to map all callers, callees, and consumers across the repository to prevent breaking cross-module contracts.
-  2. Call `markdown-docs` (`search_docs`) to cross-reference physical pinouts, CAN IDs, or ADC/sensor electrical specifications against official vehicle documentation.
-* Only fall back to `ripgrep` (`grep_search` / `rg`) or direct file viewing after verifying callers and specs or if the MCP tools return insufficient results.
+Follow this prescriptive 3-step sequence before inspecting raw code or modifying any firmware module:
 
-### Tool Execution Priority
-1. **`codebase-memory-mcp` (Priority 1: Architecture & Call Graphs)**
-   * Trace callers, callees, definitions, and symbol references (`search_graph`, `trace_path`, `get_code_snippet`, `query_graph`).
-   * Mandatory before modifying any public function, shared buffer, or driver interface.
-2. **`markdown-docs` (Priority 1: Vehicle & Hardware Specs)**
-   * Retrieve pinouts, CAN DBC definitions, ECU architectures, and engineering documentation (`search_docs`, `get_section`, `find_code_blocks`).
-   * Consult specs before changing driver or application interfaces.
-3. **`ripgrep` (`grep_search` / `rg`) (Priority 2: Fast Text & Token Matching)**
-   * Fast matching for exact string literals, log/error messages, `#define` macro values, and non-C files (YAML, JSON, CMakeLists). Use ripgrep exclusively; avoid slow or unindexed recursive grep searches.
-4. **Targeted Inspection & Subagent Delegation**
-   * Inspect code in focused windowed slices (`StartLine`/`EndLine`).
-   * In Antigravity, delegate broad exploration tasks to subagents (`Model: 'flash'` or `'flash_lite'`) to preserve lead agent context.
+1. **Step 1: Specification & Architecture Check (`markdown-docs`)**
+   * Call `search_docs(directory="docs", query="<module>")` to retrieve hardware architecture notes, DMA memory mapping, and Mermaid dataflow diagrams.
+   * Verify hardware constraints and physical pinout assignments before inspecting or changing code.
+2. **Step 2: Impact & Call-Graph Analysis (`codebase-memory-mcp`)**
+   * If the project is not listed in `list_projects` or returns `Project not found`, run auto-indexing immediately: `index_repository(repo_path=".", mode="full")`.
+   * Trace callers and callees (`trace_path` with `direction="inbound"` or `"outbound"`) on any function or shared buffer to map all producers, consumers, and ISR boundaries.
+3. **Step 3: Targeted Inspection (`codebase-memory-mcp` or windowed read)**
+   * Extract exact symbol implementations with `get_code_snippet` without reading raw boilerplate files.
+   * Only fall back to `ripgrep` (`grep_search`) for exact string literals, `#define` macro values, or non-C config files.
 
 ## Universal Invariants & Guardrails
 
@@ -59,8 +51,8 @@ Follow this priority order when exploring, navigating, or modifying the codebase
 * **No Binaries**: Never commit compiled artifacts (`.bin`, `.hex`, `.elf`, `.o`, `.a`).
 
 ### 4. In-Session Verification Gate
-* Every code modification must compile and pass unit tests with Ceedling (`ceedling test:all`) prior to committing.
-* Never claim code builds or tests pass without executing the verification command and inspecting output.
+* **Batched Verification**: Do NOT run Ceedling or target builds in a tight loop after every single minor edit. Run verification only at major logical milestones (e.g. after completing a cohesive implementation batch or test suite) and prior to committing/completing the task.
+* Never claim code builds or tests pass without executing the verification command (`ceedling test:all`) and inspecting output.
 * If tests fail, analyze the assertion failures, apply minimal targeted fixes, and re-test.
 
 ## Multi-Vendor Harness Support
@@ -76,6 +68,8 @@ Load the corresponding skill when performing these specialized workflows:
 
 * **Writing or Modifying C Firmware**: Load [arttu-cstyle](.agents/skills/arttu-cstyle/SKILL.md).  
   *Enforces type discipline (`stdint.h`), Cortex-M single-precision float suffixes (`f`), deterministic timeout loops, ISR ring buffers, MISRA-adjacent safety, and Ceedling mock patterns.*
+* **Code Discovery & Call Graph Tracing**: Load [arttu-code-discovery](.agents/skills/arttu-code-discovery/SKILL.md).  
+  *Enforces codebase-memory-mcp auto-indexing, inbound/outbound call graph tracing recipes, and targeted symbol snippet extraction.*
 * **Hardware Debugging & Flashing**: Load [arttu-stm32-debugging](.agents/skills/arttu-stm32-debugging/SKILL.md).  
   *Enforces non-intrusive SWD connection (`mode=HOTPLUG shared`), ELF symbol RAM inspection, memory injection guardrails, and HardFault crash analysis via `addr2line`.*
 * **Vehicle Architecture & Specs**: Load [arttu-docs-assistant](.agents/skills/arttu-docs-assistant/SKILL.md).  
