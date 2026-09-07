@@ -13,6 +13,8 @@ Distributed multi-ECU automotive architecture (STM32 Cortex-M MCUs) communicatin
 | **Run Single Module Test** | `ceedling test:<module>` | Fast iteration (e.g. `ceedling test:moving_avg`) |
 | **Clean Test Artifacts** | `ceedling clobber` | Run when mock headers or dependencies get stale |
 | **Build Documentation** | `npm run docs:build` | In `documentation/` directory (VitePress verification) |
+| **Create Pull Request** | `gh pr create --base dev --title "<title>" --body-file "<file>"` | Non-interactive PR creation (requires `--base dev`) |
+| **Check PR CI Status** | `gh pr checks` | Verify remote GitHub Actions workflow passes |
 
 ## Universal Invariants & Guardrails
 
@@ -28,7 +30,8 @@ Distributed multi-ECU automotive architecture (STM32 Cortex-M MCUs) communicatin
 
 ### 3. Git & Workflow Hygiene
 * **Target Branch**: Never push or open PRs directly to `main`. All PRs must target `dev/` using conventional branch prefixes (`feat/`, `fix/`, `refactor/`, `test/`, `docs/`).
-* **Open Draft PR Early**: Signal work-in-progress before writing substantial code.
+* **Pull Requests via GitHub CLI (`gh`)**: Always create PRs using the GitHub CLI with non-interactive flags (`--base dev`, `--title`, and `--body`/`--body-file`). Never run bare `gh pr create` without arguments, as interactive prompts freeze agent execution. Always verify CI checks pass with `gh pr checks`.
+* **Open Draft PR Early**: Signal work-in-progress before writing substantial code (`--draft`).
 * **No Binaries**: Never commit compiled artifacts (`.bin`, `.hex`, `.elf`, `.o`, `.a`).
 
 ### 4. Verification Gate
