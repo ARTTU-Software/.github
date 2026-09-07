@@ -4,7 +4,7 @@ Rules to keep the codebase relatively (hopefully) clean.
 
 # Repository Structure & Organization
 * **Repo-per-Board**: Each repository represents exactly one hardware board (ECU, Dashboard, etc.).
-* **The `lib/commons` Submodule**: Shared drivers and math utilities are linked via Git Submodules. **Do not** manually copy code from `Commons` into your repo.
+* **The `common` Submodule**: Shared drivers and math utilities are linked via Git Submodules. **Do not** manually copy code from `common` into your repo.
 * **Atomic Commits**: Keep commits small. One logical change per commit (e.g., "Add CAN mailbox filtering" not "Work on car").
 
 # Branch Conventions
