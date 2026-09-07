@@ -22,7 +22,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Resolve PAT
+      - name: Resolve PAT & Configure Git
         id: auth
         run: |
           TOKEN="${{ secrets.SYNC_TOKEN }}"
@@ -31,11 +31,13 @@ jobs:
           fi
           echo "::add-mask::$TOKEN"
           echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+          git config --global url."https://oauth:${TOKEN}@github.com/".insteadOf "https://${TOKEN}@github.com/"
 
       - name: Run GitHub File Sync
         uses: BetaHuhn/repo-file-sync-action@v1
         with:
           GH_PAT: ${{ steps.auth.outputs.token }}
+          IS_FINE_GRAINED: true
           CONFIG_PATH: .github/sync.yml
           PR_LABELS: |
             automation
