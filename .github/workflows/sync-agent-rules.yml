@@ -25,23 +25,20 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Resolve PAT
-        id: auth
-        run: |
-          TOKEN="${{ secrets.SYNC_TOKEN }}"
-          if [ -z "$TOKEN" ]; then
-            TOKEN="${{ secrets.DOCS_DISPATCH_TOKEN }}"
-          fi
-          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+      - name: Generate GitHub App Token
+        id: app_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.SYNC_APP_ID }}
+          private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
 
       - name: Run GitHub File Sync
         id: sync
         uses: BetaHuhn/repo-file-sync-action@v1
         with:
-          GH_INSTALLATION_TOKEN: ${{ steps.auth.outputs.token }}
+          GH_INSTALLATION_TOKEN: ${{ steps.app_token.outputs.token }}
           CONFIG_PATH: .github/sync.yml
-          GIT_USERNAME: "github-actions[bot]"
-          GIT_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
           PR_LABELS: |
             automation
             agent-rules
@@ -50,7 +47,7 @@ jobs:
       - name: Convert PRs to Draft
         if: steps.sync.outputs.pull_request_urls != ''
         env:
-          GH_TOKEN: ${{ steps.auth.outputs.token }}
+          GH_TOKEN: ${{ steps.app_token.outputs.token }}
         run: |
           echo "Processing PRs: ${{ steps.sync.outputs.pull_request_urls }}"
           echo '${{ steps.sync.outputs.pull_request_urls }}' | jq -r '.[]?' | while read -r url; do
