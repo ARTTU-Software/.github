@@ -1,9 +1,11 @@
-# AGENTS.md — ARTTU Formula Student
+# AGENTS.md - ARTTU Formula Student
 
 You are building embedded firmware and tooling for **ARTTU Formula Student Racing**. Safety, determinism, and hardware boundary isolation are non-negotiable.
 
 ## Architecture
 Distributed multi-ECU automotive architecture (STM32 Cortex-M MCUs) communicating over Classic CAN/FDCAN via central DBC definitions, with state-driven control (FSM) and bare-metal/FreeRTOS deterministic execution.
+
+**Step 0 (Mandatory)**: Before starting ANY task, immediately load [arttu-code-discovery](.agents/skills/arttu-code-discovery/SKILL.md). Before any CODE task, load [arttu-cstyle](.agents/skills/arttu-cstyle/SKILL.md). Before any DOCUMENTATION task, immediately load [arttu-docs-assistant](.agents/skills/arttu-docs-assistant/SKILL.md).
 
 ## Essential Commands
 
@@ -21,8 +23,6 @@ Distributed multi-ECU automotive architecture (STM32 Cortex-M MCUs) communicatin
 | **Create Pull Request** | `gh pr create --base dev --title "<title>" --body-file "<file>"` | Non-interactive PR creation (requires `--base dev`) |
 
 ## Code Discovery & Tool Hierarchy
-
-**Step 0 (Mandatory)**: Before starting ANY code task, immediately load both [arttu-code-discovery](.agents/skills/arttu-code-discovery/SKILL.md) and [arttu-cstyle](.agents/skills/arttu-cstyle/SKILL.md).
 
 Follow this prescriptive 4-step sequence before inspecting raw code or modifying any firmware module:
 
