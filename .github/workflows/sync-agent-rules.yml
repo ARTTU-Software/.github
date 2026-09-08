@@ -19,6 +19,20 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - 'ARTTU-Software/STM32-Template@main'
+          - 'ARTTU-Software/CAN-Gateway@dev'
+          - 'ARTTU-Software/ECU@dev'
+          - 'ARTTU-Software/Dashboard@dev'
+          - 'ARTTU-Software/Telemetry@dev'
+          - 'ARTTU-Software/LVSOC-26@dev'
+          - 'ARTTU-Software/Galvanic-Isolator@dev'
+          - 'ARTTU-Software/common@dev'
+          - 'ARTTU-Software/utilities@main'
+
     steps:
       - name: Checkout .github repo
         uses: actions/checkout@v4
@@ -33,23 +47,34 @@ jobs:
           private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
 
+      - name: Prepare Single-Repo Sync Config
+        run: |
+          node -e "
+          const fs = require('fs');
+          const content = fs.readFileSync('.github/sync.yml', 'utf8');
+          const reposIndex = content.indexOf('repos:');
+          const newContent = content.substring(0, reposIndex) + 'repos: |\n      ${{ matrix.target }}\n';
+          fs.writeFileSync('.github/sync-matrix.yml', newContent);
+          "
+
       - name: Run GitHub File Sync
         id: sync
         uses: BetaHuhn/repo-file-sync-action@v1
         with:
           GH_INSTALLATION_TOKEN: ${{ steps.app_token.outputs.token }}
-          CONFIG_PATH: .github/sync.yml
+          CONFIG_PATH: .github/sync-matrix.yml
+          COMMIT_EACH_FILE: false
           PR_LABELS: |
             automation
             agent-rules
           COMMIT_PREFIX: "chore(agents): "
 
-      - name: Convert PRs to Draft
+      - name: Convert PR to Draft
         if: steps.sync.outputs.pull_request_urls != ''
         env:
           GH_TOKEN: ${{ steps.app_token.outputs.token }}
         run: |
-          echo "Processing PRs: ${{ steps.sync.outputs.pull_request_urls }}"
+          echo "Processing PR: ${{ steps.sync.outputs.pull_request_urls }}"
           echo '${{ steps.sync.outputs.pull_request_urls }}' | jq -r '.[]?' | while read -r url; do
             if [ -n "$url" ]; then
               echo "Ensuring draft status for $url..."
