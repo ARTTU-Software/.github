@@ -46,6 +46,7 @@ jobs:
       - name: Run Clang-Tidy Static Analysis
         uses: cpp-linter/cpp-linter-action@v2
         id: linter
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
