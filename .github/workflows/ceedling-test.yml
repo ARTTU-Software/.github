@@ -34,7 +34,7 @@ jobs:
         if: always()
         with:
           files: build/artifacts/**/junit_tests_report.xml
-          action_fail_on_ineligible: false
+          action_fail: false
 
       - name: Publish Code Coverage to Step Summary
         if: always()
