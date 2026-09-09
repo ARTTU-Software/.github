@@ -22,15 +22,65 @@ jobs:
           bundler-cache: true
 
       - name: Install Dependencies
-        run: sudo apt-get update && sudo apt-get install -y gcovr gcc
+        run: pip install --no-cache-dir gcovr
 
-      - name: Run Unit Tests
+      - name: Run Unit Tests & Coverage
         run: |
           mkdir -p test/support
-          bundle exec ceedling test:all
+          bundle exec ceedling gcov:all || bundle exec ceedling test:all
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          files: build/artifacts/test/junit_tests_report.xml
+          files: build/artifacts/**/junit_tests_report.xml
+          action_fail_on_ineligible: false
+
+      - name: Publish Code Coverage to Step Summary
+        if: always()
+        run: |
+          if [ -f build/artifacts/gcov/gcovr/coverage.txt ]; then
+            echo "### 📊 Code Coverage Summary" >> $GITHUB_STEP_SUMMARY
+            echo '```text' >> $GITHUB_STEP_SUMMARY
+            cat build/artifacts/gcov/gcovr/coverage.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Comment Coverage on PR
+        uses: actions/github-script@v7
+        if: always() && github.event_name == 'pull_request'
+        continue-on-error: true
+        with:
+          script: |
+            const fs = require('fs');
+            const coverageFile = 'build/artifacts/gcov/gcovr/coverage.txt';
+            if (!fs.existsSync(coverageFile)) {
+              console.log('No coverage file found, skipping PR comment.');
+              return;
+            }
+            const coverageContent = fs.readFileSync(coverageFile, 'utf8');
+            const header = '### 📊 Code Coverage Summary';
+            const body = `${header}\n\n\`\`\`text\n${coverageContent}\n\`\`\``;
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(c => c.body && c.body.includes(header));
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
+              });
+            }

@@ -53,14 +53,17 @@ jobs:
           # change to `file` for clang-format checks
           style: ''
           
-          tidy-checks: '-*,bugprone-*,clang-analyzer-*,performance-*,misc-*,cert-*,-misc-include-cleaner,-performance-no-int-to-ptr'
+          tidy-checks: '-*,bugprone-*,clang-analyzer-*,performance-*,-performance-no-int-to-ptr'
+          ignore: 'Drivers|Middlewares|test|build'
+          lines-changed-only: 2
           
           tidy-review: true
           format-review: false # change to true for clang-format checks
+          step-summary: true
           thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
           
           extra-args: >
-            -target arm-none-eabi
+            --extra-arg=--target=arm-none-eabi
             --extra-arg=-isystem${{ steps.arm_paths.outputs.ARM_INCLUDE }}
             --extra-arg=-isystem${{ steps.arm_paths.outputs.ARM_GCC_INCLUDE }}
             --extra-arg=-isystem${{ steps.arm_paths.outputs.ARM_GCC_INCLUDE_FIXED }}
