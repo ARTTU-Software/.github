@@ -19,14 +19,12 @@ jobs:
           release: 'latest'
 
       - name: Install Build Tools
-        run: sudo apt-get install -y ninja-build
+        run: pip install --no-cache-dir ninja
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ runner.os }}-stm32-ccache-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-stm32-ccache-
+          key: ${{ runner.os }}-stm32
           max-size: 500M
           verbose: 1
 
