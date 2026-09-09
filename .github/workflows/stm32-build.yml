@@ -24,10 +24,17 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          # This key ensures the cache is shared across runs of the same OS
-          key: ${{ runner.os }}-stm32-ccache
+          key: ${{ runner.os }}-stm32-ccache-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-stm32-ccache-
+          max-size: 500M
+          verbose: 1
 
       - name: Configure CMake
+        env:
+          CCACHE_BASEDIR: ${{ github.workspace }}
+          CCACHE_COMPILERCHECK: content
+          CCACHE_NOHASHDIR: "true"
         run: |
           cmake -B build -G Ninja \
             -DCMAKE_MAKE_PROGRAM=$(which ninja) \
@@ -39,6 +46,10 @@ jobs:
             -DFIRMWARE_VERSION="${{ github.ref_name }}"
 
       - name: Compile Project
+        env:
+          CCACHE_BASEDIR: ${{ github.workspace }}
+          CCACHE_COMPILERCHECK: content
+          CCACHE_NOHASHDIR: "true"
         run: cmake --build build
 
       - name: Upload Firmware Artifacts
