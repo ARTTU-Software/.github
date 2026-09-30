@@ -33,14 +33,17 @@ call_mcp_tool(ServerName='codebase-memory-mcp', ToolName='get_code_snippet', Arg
   'qualified_name': '<PROJECT_NAME>.Core.Src.App.DataProcessing.data_processing.apply_kalman_to_sensor'
 })
 
-### Recipe B: Shared Buffer & Hardware Variable Tracing (trace_path with edge_types) — Priority 2
+### Recipe B: Shared Buffer & Hardware Variable Tracing — Priority 2
 Map all writers (producers) and readers (consumers) of any volatile flag, DMA array, or global variable:
+1. Locate references and line bounds via `search_code(pattern='<var_name>', mode='compact')`.
+2. Trace the controlling ISR or processing function callers using `trace_path`:
 call_mcp_tool(ServerName='codebase-memory-mcp', ToolName='trace_path', Arguments={
   'project': '<PROJECT_NAME>',
-  'function_name': 'adc1_conversion_complete',
+  'function_name': 'HAL_ADC_ConvCpltCallback',
   'direction': 'inbound',
-  'edge_types': ['WRITES', 'USAGE']
+  'edge_types': ['CALLS', 'WRITES', 'USAGE']
 })
+*Note: `trace_path` argument is strictly `function_name`. Do NOT pass raw variable names directly to `trace_path`.*
 
 ### Recipe C: Trace Inbound Callers (trace_path) — Priority 3
 Find every function, ISR, or task that calls a target function:
@@ -66,6 +69,7 @@ call_mcp_tool(ServerName='codebase-memory-mcp', ToolName='search_code', Argument
   'pattern': 'kalman_takasu',
   'mode': 'compact'
 })
+*Search Query Discipline: Search exact C identifiers or tokens only (`adc1_buffer`, `apply_kalman`). NEVER search for filenames (`*.h`, `*.c` — use file search tools), and NEVER search natural language sentences (e.g. `"high frequency"`).*
 
 ### Recipe F: Scoped Symbol & Structure Discovery (search_graph with Labels) — Priority 6
 Search by label (`Variable`, `Field`, `Function`, `Macro`, `Class`) while scoping to application directories:
@@ -99,6 +103,13 @@ call_mcp_tool(ServerName='codebase-memory-mcp', ToolName='get_architecture', Arg
   'aspects': ['clusters', 'hotspots']
 })
 
+### Recipe J: Targeted Section Extraction from Docs (get_section) — Priority 10
+When reading architecture or pinout documents, extract only the target section instead of viewing entire markdown files:
+call_mcp_tool(ServerName='markdown-docs', ToolName='get_section', Arguments={
+  'file': '<REPO_PATH>/docs/modules/data-processing/adc-buffer.md',
+  'heading': 'Architecture'
+})
+
 ---
 
 ## 3. Prescriptive Discovery Protocol (Hybrid Strategy)
@@ -106,24 +117,31 @@ call_mcp_tool(ServerName='codebase-memory-mcp', ToolName='get_architecture', Arg
 Follow this prescriptive 4-step sequence before modifying or designing any firmware module:
 
 1. Step 1: Specification & Architecture Check (markdown-docs + get_architecture)
-   - Query markdown-docs:search_docs with directory="<REPO_PATH>/docs" (absolute path) for module specs, CAN frame layouts, and pinouts.
-   - Run Recipe I (get_architecture with aspects=['clusters', 'hotspots']) to view de-facto architectural seams and communication hubs without file scanning.
+   - Query `markdown-docs:search_docs` with `directory="<REPO_PATH>/docs"` (absolute path) for module specs, CAN frame layouts, and pinouts.
+   - Use `markdown-docs:get_section(file="<doc>", heading="<heading>")` to read the exact heading needed (~100 tokens).
+   - Run Recipe I (`get_architecture` with `aspects=['clusters', 'hotspots']`) to view de-facto architectural seams and communication hubs without file scanning.
 2. Step 2: Subsystem Mapping & Hybrid Search (query_graph or search_code)
-   - For unfamiliar folders, run Recipe G (query_graph) to extract the entire subsystem's degree-ranked function signatures in one call (~200 tokens).
-   - For specific identifiers, variables, or types, run Recipe E (search_code in mode="compact") or Recipe F (search_graph with label).
+   - For unfamiliar folders, run Recipe G (`query_graph`) to extract the entire subsystem's degree-ranked function signatures in one call (~200 tokens).
+   - For specific identifiers, variables, or types, run Recipe E (`search_code` in `mode="compact"`).
 3. Step 3: Call-Graph, Variable & Dataflow Impact (trace_path)
-   - For shared arrays, DMA buffers, or flags, run Recipe B (trace_path with edge_types=['WRITES', 'USAGE']) to map all producers and consumers.
-   - Run Recipe C (trace_path inbound) on functions to map callers across tasks, ISRs, and FSM states.
-   - For sensor, ADC, or CAN signal flow, run Recipe D (trace_path with mode="data_flow") to trace argument expressions across hops.
+   - For shared arrays or DMA buffers, use Recipe B (`search_code` to locate references, then `trace_path` on the ISR/accessor function).
+   - Run Recipe C (`trace_path` inbound) on functions to map callers across tasks, ISRs, and FSM states.
+   - For sensor, ADC, or CAN signal flow, run Recipe D (`trace_path` with `mode="data_flow"`) to trace argument expressions across hops.
 4. Step 4: Targeted Symbol Snippet Extraction (get_code_snippet)
-   - ALWAYS call get_code_snippet to inspect the exact function implementation and line bounds (~300 tokens).
-   - Windowed Read Rule:
-     - Small cohesive files (≤200 lines, e.g. headers, test files, configs): Full-file view permitted in a single call.
-     - Large files (>200 lines): Windowed reading (≤100 lines) or get_code_snippet is strictly mandatory. NEVER dump large files unwindowed.
+   - ALWAYS call `get_code_snippet` to inspect the exact function implementation and line bounds (~150-300 tokens).
+   - Never dump or crawl large files. Small cohesive files (≤200 lines, e.g. headers, test files, configs) may be viewed in a single call.
 
 ---
 
-## 4. When to Use Targeted Direct Grep (grep_search)
+## 4. Critical Anti-Patterns (Zero-Tolerance)
+
+1. **NO Sequential Windowed Reads (The Paging Loophole)**: NEVER read through a large source file in sequential slices (`1-100`, `101-200`, `201-300`). This floods context history and triggers quadratic token billing. Always extract the target function with `get_code_snippet`.
+2. **NO Delegating Reads to Research Subagents**: Do NOT spawn subagents just to read files. It adds 30+ seconds of coordination latency, duplicates context tokens, and loses precision. Use `get_code_snippet` directly in ~150 tokens.
+3. **NO Non-Symbol Searches in `search_code`**: Never search for filenames (`*.h`, `*.c`) or natural language prose (`"high frequency"`) via `search_code`. Use file listing for paths, and C identifiers for code search.
+
+---
+
+## 5. When to Use Targeted Direct Grep (grep_search)
 
 Use grep_search with a scoped SearchPath specifically for:
 - Macro definitions (#define) and register bitmasks (e.g. ADC_CR2_ADON).
