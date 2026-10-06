@@ -18,6 +18,7 @@ def head(root):
 
 
 def source_hashes(root, files):
+    root = root.resolve()
     hashes = {}
     for name in files:
         path = (root / name).resolve()

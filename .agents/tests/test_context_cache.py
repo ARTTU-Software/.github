@@ -16,6 +16,14 @@ class EvidenceCacheTests(Fixture):
         self.assertEqual(status, 'hit')
         self.assertEqual(body, self.card)
 
+    def test_root_alias_and_canonical_path_share_evidence(self):
+        # Like a Windows short directory name, this spelling resolves to the
+        # same directory but cannot be compared lexically with resolved files.
+        alias = self.root / 'Core' / '..'
+        save(alias, 'application', self.card, self.files)
+        self.assertEqual(load(self.root, 'application'), (self.card, 'hit'))
+        self.assertEqual(load(alias, 'application'), (self.card, 'hit'))
+
     def test_source_change_and_deletion_invalidate(self):
         save(self.root, 'application', self.card, self.files)
         self.app.write_text('void new_application(void) {}')
