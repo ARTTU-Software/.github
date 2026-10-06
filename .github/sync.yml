@@ -8,14 +8,34 @@ group:
         dest: GEMINI.md
       - source: .cursor/mcp.json
         dest: .cursor/mcp.json
+      - source: .cursor/hooks.json
+        dest: .cursor/hooks.json
+      - source: .mcp.json
+        dest: .mcp.json
+      - source: .codex/config.toml
+        dest: .codex/config.toml
+      - source: .codex/hooks.json
+        dest: .codex/hooks.json
       - source: .claude/settings.json
         dest: .claude/settings.json
       - source: .agents/hooks/
         dest: .agents/hooks/
+      - source: .agents/hooks.json
+        dest: .agents/hooks.json
+      - source: .agents/.gitignore
+        dest: .agents/.gitignore
+      - source: .agents/harness-manifest.json
+        dest: .agents/harness-manifest.json
+      - source: .agents/tests/
+        dest: .agents/tests/
       - source: .agents/skills/
         dest: .agents/skills/
       - source: PULL_REQUEST_TEMPLATE.md
         dest: .github/pull_request_template.md
+      - source: docs/agent-harness.md
+        dest: docs/agent-harness.md
+      - source: .github/workflows/agent-harness-check.yml
+        dest: .github/workflows/agent-harness-check.yml
     repos: |
       ARTTU-Software/STM32-Template@main
       ARTTU-Software/CAN-Gateway@dev

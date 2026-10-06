@@ -9,12 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           submodules: recursive 
 
       - name: Install ARM Toolchain
-        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        uses: carlosperate/arm-none-eabi-gcc-action@98c40e51546516419841748d3210c290df0d2c6c # v1
         with:
           release: 'latest'
 
@@ -22,7 +22,7 @@ jobs:
         run: pip install --no-cache-dir ninja
 
       - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2
         with:
           key: ${{ runner.os }}-stm32
           max-size: 500M
@@ -51,7 +51,7 @@ jobs:
         run: cmake --build build
 
       - name: Upload Firmware Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: stm32-artifacts
           path: |

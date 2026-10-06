@@ -19,12 +19,12 @@ jobs:
       checks: write 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           submodules: recursive
 
       - name: Install ARM Toolchain
-        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        uses: carlosperate/arm-none-eabi-gcc-action@98c40e51546516419841748d3210c290df0d2c6c # v1
         with:
           release: 'latest'
 
@@ -38,15 +38,14 @@ jobs:
           echo "ARM_GCC_INCLUDE_FIXED=${ARM_BASE}/lib/gcc/arm-none-eabi/${ARM_VERSION}/include-fixed" >> $GITHUB_OUTPUT
 
       - name: Download Build Database
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: ${{ inputs.artifact_name }}
           path: build
 
       - name: Run Clang-Tidy Static Analysis
-        uses: cpp-linter/cpp-linter-action@v2
+        uses: cpp-linter/cpp-linter-action@8120e05c7fbd25fa09fa93424ec49f55f7b304ab # v2
         id: linter
-        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -68,3 +67,7 @@ jobs:
             --extra-arg=-isystem${{ steps.arm_paths.outputs.ARM_INCLUDE }}
             --extra-arg=-isystem${{ steps.arm_paths.outputs.ARM_GCC_INCLUDE }}
             --extra-arg=-isystem${{ steps.arm_paths.outputs.ARM_GCC_INCLUDE_FIXED }}
+
+      - name: Fail on static analysis findings
+        if: steps.linter.outputs.checks-failed > 0
+        run: exit 1

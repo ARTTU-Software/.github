@@ -63,7 +63,7 @@ Every generated or updated module page must answer the following core engineerin
 * How is shared state synchronized (seqlocks, mutexes, ring buffers, atomic primitives)?
 
 ### 3. Dataflow or State Machine (Mermaid Diagram Mandatory)
-Whenever data movement, concurrency handoffs, or state transitions exist, include a Mermaid diagram following the team standards from `adding-mermaid-diagrams.md`:
+Whenever data movement, concurrency handoffs, or state transitions exist, include a Mermaid diagram using the conventions below (self-contained; no external template file is required):
 * **The Column Layout (Multi-Process Flows)**:
   * Top-level flowchart must be Left-to-Right (`flowchart LR`).
   * Group major concurrent pathways into separate `subgraph` blocks (e.g. Producers, Shared State, Consumers).

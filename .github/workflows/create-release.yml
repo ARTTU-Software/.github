@@ -18,21 +18,21 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0 
 
       # runs only if an artifact name is provided, otherwise it skips this step
       - name: Download Build Artifacts
         if: ${{ inputs.artifact_name != '' }}
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         continue-on-error: true
         with:
           name: ${{ inputs.artifact_name }}
           path: build-artifacts
 
       - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           generate_release_notes: true
           fail_on_unmatched_files: false # dont fail if no files match, since artifact is optional
@@ -44,7 +44,7 @@ jobs:
       # ==========================================
       # Notify the documentation repo to rebuild & redeploy
       - name: Notify documentation
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@ff45666b9427631e3450c54a1bcbee4d9ff4d7c0 # v3
         with:
           token: ${{ secrets.DOCS_DISPATCH_TOKEN }}
           repository: ARTTU-Software/documentation

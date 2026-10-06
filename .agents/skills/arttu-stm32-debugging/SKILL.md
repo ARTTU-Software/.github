@@ -39,7 +39,7 @@ STM32_Programmer_CLI -l
 
 ### Mandatory Runtime Flags
 For all live inspection and variable reads/writes, you **MUST** use:
-1. `mode=HOTPLUG`: Attaches over SWD without asserting reset (`nRST`) and keeps the CPU running uninterrupted. Prevents watchdog trips (IWDG/WWDG) and shutdown relay openings.
+1. `mode=HOTPLUG`: Attaches over SWD without asserting reset (`nRST`). It does not guarantee watchdog behavior or safe actuator state; check the selected target and operation before inspection.
 2. `shared`: Enables ST-LINK Server multiplexing so STM32CubeIDE, serial terminals, and CubeMonitor can access the probe simultaneously without "device busy" collisions.
 
 ```bash
@@ -113,7 +113,7 @@ Writing directly to hardware must never corrupt Flash memory (`0x08000000`) or O
   ```bash
   STM32_Programmer_CLI -c port=SWD mode=HOTPLUG shared -w32 0x20000140 0x42280000
   ```
-* **Atomic Multi-Word Writes**: If modifying multiple related variables simultaneously (e.g. dual sensor channels to prevent cross-channel divergence trips), halt briefly and resume immediately:
+* **Coordinated Multi-Word Writes**: Halting the CPU does not stop DMA/peripherals or guarantee watchdog behavior. Use firmware-supported injection where possible. Halt only on an explicitly approved safe bench target after confirming those interactions:
   ```bash
   STM32_Programmer_CLI -c port=SWD mode=HOTPLUG shared -halt -w32 0x20000140 0x42280000 -w32 0x20000144 0x42280000 -run
   ```

@@ -1,8 +1,18 @@
 {
+  "version": 1,
   "hooks": {
-    "PreToolUse": [
+    "preToolUse": [
       {
-        "command": "python \".agents/hooks/pre_tool_enforcer.py\""
+        "command": "python -c \"import pathlib,runpy,sys; r=next(p for p in (pathlib.Path.cwd(),*pathlib.Path.cwd().parents) if (p/'.agents/hooks/pre_tool_enforcer.py').is_file()); sys.path.insert(0,str(r/'.agents/hooks')); runpy.run_path(str(r/'.agents/hooks/pre_tool_enforcer.py'),run_name='__main__')\" --vendor cursor",
+        "timeout": 15,
+        "failClosed": true
+      }
+    ],
+    "stop": [
+      {
+        "command": "python -c \"import pathlib,runpy,sys; r=next(p for p in (pathlib.Path.cwd(),*pathlib.Path.cwd().parents) if (p/'.agents/hooks/pre_tool_enforcer.py').is_file()); sys.path.insert(0,str(r/'.agents/hooks')); runpy.run_path(str(r/'.agents/hooks/stop_gate.py'),run_name='__main__')\" --vendor cursor",
+        "timeout": 300,
+        "loop_limit": 1
       }
     ]
   }

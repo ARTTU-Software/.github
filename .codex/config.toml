@@ -1,0 +1,10 @@
+[mcp_servers.codebase-memory]
+command = "python"
+args = ["-c", "import pathlib,runpy,sys; r=next(p for p in (pathlib.Path.cwd(),*pathlib.Path.cwd().parents) if (p/'.agents/hooks/mcp_launcher.py').is_file()); sys.path.insert(0,str(r/'.agents/hooks')); runpy.run_path(str(r/'.agents/hooks/mcp_launcher.py'),run_name='__main__')", "codebase-memory-mcp@0.11.0"]
+
+[mcp_servers.markdown-docs]
+command = "python"
+args = ["-c", "import pathlib,runpy,sys; r=next(p for p in (pathlib.Path.cwd(),*pathlib.Path.cwd().parents) if (p/'.agents/hooks/mcp_launcher.py').is_file()); sys.path.insert(0,str(r/'.agents/hooks')); runpy.run_path(str(r/'.agents/hooks/mcp_launcher.py'),run_name='__main__')", "markdown-docs-mcp@0.1.5"]
+[mcp_servers.markdown-docs.env]
+MARKDOWN_DOCS_MAX_TOC_BYTES = "8192"
+MARKDOWN_DOCS_MAX_SECTION_BYTES = "8192"
