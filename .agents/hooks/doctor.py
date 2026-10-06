@@ -1,7 +1,6 @@
 """Validate local setup without installing packages or assuming hooks are trusted."""
 import argparse
 import json
-import re
 import shutil
 import subprocess
 import sys
@@ -55,12 +54,16 @@ def validate_configs(root):
         raise ValueError('Unsupported harness manifest version.')
     required = manifest['files']
     sync_path = root / '.github/sync.yml'
-    sync = sync_path.read_text() if sync_path.is_file() else None
+    mappings = None
+    if sync_path.is_file():
+        from sync_plan import load_plan
+        _, _, pairs = load_plan(root)
+        mappings = dict(pairs)
     for path in required:
         if not (root / path).exists():
             raise ValueError(f'Missing distributed harness component: {path}.')
-        if sync is not None and not re.search(r'^\s*- source: ' + re.escape(path) + r'\s*$', sync, re.M):
-            raise ValueError(f'Sync omits {path}.')
+        if mappings is not None and mappings.get(path) != path:
+            raise ValueError(f'Sync omits or relocates {path}.')
 
 
 def main():

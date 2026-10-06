@@ -20,22 +20,38 @@ on:
       - '.github/workflows/sync-agent-rules.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.targets.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
+      - name: Validate downstream payload
+        run: |
+          python .agents/hooks/sync_plan.py check
+          python .agents/hooks/doctor.py --self-test
+      - name: Read targets from sync.yml
+        id: targets
+        run: echo "matrix=$(python .agents/hooks/sync_plan.py matrix)" >> "$GITHUB_OUTPUT"
+
   sync:
+    needs: plan
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        target:
-          - 'ARTTU-Software/STM32-Template@main'
-          - 'ARTTU-Software/CAN-Gateway@dev'
-          - 'ARTTU-Software/ECU@dev'
-          - 'ARTTU-Software/Dashboard@dev'
-          - 'ARTTU-Software/Telemetry@dev'
-          - 'ARTTU-Software/LVSOC-26@dev'
-          - 'ARTTU-Software/Galvanic-Isolator@dev'
-          - 'ARTTU-Software/common@dev'
-          - 'ARTTU-Software/utilities@main'
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
 
     steps:
       - name: Checkout .github repo
@@ -50,16 +66,22 @@ jobs:
           app-id: ${{ secrets.SYNC_APP_ID }}
           private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
+          repositories: ${{ matrix.repository }}
+          permission-contents: write
+          permission-pull-requests: write
+          # Required because the payload includes .github/workflows/agent-harness-check.yml.
+          # Enable Workflows read/write on arttu-sync-bot and approve it on the installation.
+          permission-workflows: write
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
 
       - name: Prepare Single-Repo Sync Config
+        env:
+          SYNC_TARGET: ${{ matrix.target }}
         run: |
-          node -e "
-          const fs = require('fs');
-          const content = fs.readFileSync('.github/sync.yml', 'utf8');
-          const reposIndex = content.indexOf('repos:');
-          const newContent = content.substring(0, reposIndex) + 'repos: |\n      ${{ matrix.target }}\n';
-          fs.writeFileSync('.github/sync-matrix.yml', newContent);
-          "
+          python .agents/hooks/sync_plan.py render --target "$SYNC_TARGET" --output .github/sync-matrix.yml
 
       - name: Run GitHub File Sync
         id: sync
@@ -77,9 +99,9 @@ jobs:
         if: steps.sync.outputs.pull_request_urls != ''
         env:
           GH_TOKEN: ${{ steps.app_token.outputs.token }}
+          SYNC_PR_URLS: ${{ steps.sync.outputs.pull_request_urls }}
         run: |
-          echo "Processing PR: ${{ steps.sync.outputs.pull_request_urls }}"
-          echo '${{ steps.sync.outputs.pull_request_urls }}' | jq -r '.[]?' | while read -r url; do
+          printf '%s\n' "$SYNC_PR_URLS" | jq -r '.[]?' | while read -r url; do
             if [ -n "$url" ]; then
               echo "Ensuring draft status for $url..."
               gh pr ready "$url" --undo || echo "PR $url could not be converted or is already draft"

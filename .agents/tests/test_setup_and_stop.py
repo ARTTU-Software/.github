@@ -13,6 +13,8 @@ class SetupTests(Fixture):
     def copy_harness(self):
         shutil.copytree(HOOKS, self.root/'.agents/hooks', ignore=shutil.ignore_patterns('__pycache__'))
         for name in list(CONFIGS.values()) + ['.cursor/mcp.json','.mcp.json','.codex/config.toml','.github/sync.yml']:
+            if name == '.github/sync.yml' and not (ROOT/name).is_file():
+                continue
             path = self.root/name
             path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT/name, path)
@@ -29,7 +31,7 @@ class SetupTests(Fixture):
 
     def test_downstream_setup_does_not_require_central_sync_config(self):
         self.copy_harness()
-        (self.root/'.github/sync.yml').unlink()
+        (self.root/'.github/sync.yml').unlink(missing_ok=True)
         validate_configs(self.root)
 
     def test_sync_omissions_and_wrong_event_names_fail_doctor(self):
@@ -42,6 +44,8 @@ class SetupTests(Fixture):
             validate_configs(self.root)
         shutil.copyfile(ROOT/'.cursor/hooks.json', path)
         sync = self.root/'.github/sync.yml'
+        if not sync.is_file():
+            return
         sync.write_text(sync.read_text().replace('source: .codex/hooks.json','source: omitted.json'))
         with self.assertRaises(ValueError):
             validate_configs(self.root)
