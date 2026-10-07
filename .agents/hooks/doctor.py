@@ -10,6 +10,12 @@ from pathlib import Path
 CONFIGS = {'antigravity': '.agents/hooks.json', 'codex': '.codex/hooks.json',
            'claude': '.claude/settings.json', 'cursor': '.cursor/hooks.json'}
 HOOK_SCRIPTS = ('pre_tool_enforcer.py', 'stop_gate.py')
+RUNTIME_SCRIPTS = ('context_cache.py', 'doctor.py', 'edit_plan.py', 'hook_io.py',
+                   'mcp_launcher.py', 'patch_plan.py', 'policy.py', 'pre_tool_enforcer.py',
+                   'read_context.py', 'shell_policy.py', 'stop_gate.py', 'verify_changes.py')
+RUNTIME_FILES = (list(CONFIGS.values()) + ['AGENTS.md', 'CLAUDE.md', 'GEMINI.md',
+                 '.agents/.gitignore', '.agents/skills/', '.cursor/mcp.json', '.mcp.json',
+                 '.codex/config.toml'] + [f'.agents/hooks/{name}' for name in RUNTIME_SCRIPTS])
 
 
 def validate_configs(root):
@@ -52,17 +58,13 @@ def validate_configs(root):
     from mcp_launcher import PACKAGES
     if {entry['args'][-1] for entry in cursor.values()} != PACKAGES:
         raise ValueError('MCP config versions differ from the launcher allowlist.')
-    manifest = json.loads((root / '.agents/harness-manifest.json').read_text())
-    if manifest.get('version') != 1:
-        raise ValueError('Unsupported harness manifest version.')
-    required = manifest['files']
     sync_path = root / '.github/sync.yml'
     mappings = None
     if sync_path.is_file():
         from sync_plan import load_plan
         _, _, pairs = load_plan(root)
         mappings = dict(pairs)
-    for path in required:
+    for path in RUNTIME_FILES:
         if not (root / path).exists():
             raise ValueError(f'Missing distributed harness component: {path}.')
         if mappings is not None and mappings.get(path) != path:
@@ -83,6 +85,8 @@ def main():
         print('Hook activation/trust and live MCP connectivity: not inferred; check the client hook/MCP UI.')
         print('Antigravity MCP: import the pinned .mcp.json server entries in its MCP settings.')
         if args.self_test:
+            if not (root / '.agents/tests').is_dir():
+                raise ValueError('Harness self-tests are central-only; run doctor without --self-test here.')
             return subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s', str(root / '.agents/tests'), '-q'], cwd=root).returncode
     except Exception as error:
         print(f'FAIL: {error}', file=sys.stderr)

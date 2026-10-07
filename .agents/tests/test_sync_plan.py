@@ -1,5 +1,4 @@
 """Exercise the actual central sync mappings, not a manually assembled harness."""
-import os
 import subprocess
 import sys
 import unittest
@@ -10,17 +9,28 @@ from sync_plan import export_payload, load_plan
 
 @unittest.skipUnless((ROOT / '.github/sync.yml').is_file(), 'Central distribution configuration only')
 class SyncPlanTests(Fixture):
-    def test_exported_bundle_runs_its_own_regression_suite(self):
+    def test_exported_runtime_works_without_central_harness_assets(self):
         _, targets, mappings = load_plan(ROOT)
         self.assertIn('ARTTU-Software/BMS-Master@dev', targets)
         export_payload(ROOT, self.root, mappings)
         validate_configs(self.root)
-        self.assertFalse((self.root / '.github/sync.yml').exists())
+        for path in ['.github/sync.yml', '.agents/tests', '.agents/harness-manifest.json',
+                     'docs/agent-harness.md', '.github/workflows/agent-harness-check.yml',
+                     '.agents/hooks/benchmark_context.py', '.agents/hooks/sync_plan.py']:
+            self.assertFalse((self.root / path).exists(), path)
         result = subprocess.run(
-            [sys.executable, '-m', 'unittest', 'discover', '-s', '.agents/tests', '-q'],
-            cwd=self.root, capture_output=True, text=True, timeout=120,
-            env={**os.environ, 'PYTHONDONTWRITEBYTECODE': '1'})
+            [sys.executable, '.agents/hooks/doctor.py'],
+            cwd=self.root, capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        references = list((ROOT / '.agents/skills').glob('*/references/**/*'))
+        self.assertTrue(any(path.is_file() for path in references))
+        for path in references:
+            if path.is_file():
+                self.assertEqual(path.read_bytes(), (self.root / path.relative_to(ROOT)).read_bytes())
+        result = subprocess.run([sys.executable, '.agents/hooks/doctor.py', '--self-test'],
+                                cwd=self.root, capture_output=True, text=True, timeout=10)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('central-only', result.stderr)
 
     def test_matrix_and_render_use_configured_targets(self):
         import json
@@ -38,12 +48,13 @@ class SyncPlanTests(Fixture):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(output.read_text(), header + '    repos: |\n      ' + entry['target'] + '\n')
 
-    def test_workflow_uses_plan_and_scoped_workflow_permission(self):
+    def test_workflow_uses_plan_and_scoped_runtime_permissions(self):
         text = (ROOT / '.github/workflows/sync-agent-rules.yml').read_text()
         for declaration in ['needs: plan', 'fromJSON(needs.plan.outputs.matrix)',
-                            'repositories: ${{ matrix.repository }}', 'permission-workflows: write',
+                            'repositories: ${{ matrix.repository }}',
                             'permission-contents: write', 'permission-pull-requests: write']:
             self.assertIn(declaration, text)
+        self.assertNotIn('permission-workflows:', text)
 
     def test_invalid_targets_and_destination_omissions_fail(self):
         path = self.root / '.github/sync.yml'

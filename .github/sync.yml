@@ -18,20 +18,36 @@ group:
         dest: .codex/hooks.json
       - source: .claude/settings.json
         dest: .claude/settings.json
-      - source: .agents/hooks/
-        dest: .agents/hooks/
+      - source: .agents/hooks/context_cache.py
+        dest: .agents/hooks/context_cache.py
+      - source: .agents/hooks/doctor.py
+        dest: .agents/hooks/doctor.py
+      - source: .agents/hooks/edit_plan.py
+        dest: .agents/hooks/edit_plan.py
+      - source: .agents/hooks/hook_io.py
+        dest: .agents/hooks/hook_io.py
+      - source: .agents/hooks/mcp_launcher.py
+        dest: .agents/hooks/mcp_launcher.py
+      - source: .agents/hooks/patch_plan.py
+        dest: .agents/hooks/patch_plan.py
+      - source: .agents/hooks/policy.py
+        dest: .agents/hooks/policy.py
+      - source: .agents/hooks/pre_tool_enforcer.py
+        dest: .agents/hooks/pre_tool_enforcer.py
+      - source: .agents/hooks/read_context.py
+        dest: .agents/hooks/read_context.py
+      - source: .agents/hooks/shell_policy.py
+        dest: .agents/hooks/shell_policy.py
+      - source: .agents/hooks/stop_gate.py
+        dest: .agents/hooks/stop_gate.py
+      - source: .agents/hooks/verify_changes.py
+        dest: .agents/hooks/verify_changes.py
       - source: .agents/hooks.json
         dest: .agents/hooks.json
       - source: .agents/.gitignore
         dest: .agents/.gitignore
-      - source: .agents/harness-manifest.json
-        dest: .agents/harness-manifest.json
-      - source: .agents/tests/
-        dest: .agents/tests/
       - source: .agents/skills/
         dest: .agents/skills/
-      - source: .github/workflows/agent-harness-check.yml
-        dest: .github/workflows/agent-harness-check.yml
     repos: |
       ARTTU-Software/STM32-Template@main
       ARTTU-Software/CAN-Gateway@dev

@@ -39,7 +39,7 @@ Do not run firmware discovery or load every skill for unrelated Git, tooling, or
 ## Verification and delivery
 
 - Verify at cohesive milestones, not after every minor edit. Before completing firmware changes, execute `bundle exec ceedling test:all` when the repository uses Bundler, otherwise `ceedling test:all`; run its required target build. Report commands actually run and any missing configuration/tooling.
-- Harness changes: `python -m unittest discover -s .agents/tests -q` and `python .agents/hooks/doctor.py`.
+- Runtime setup check: `python .agents/hooks/doctor.py`. Harness regression tests live only in the central `.github` repository; run `python -m unittest discover -s .agents/tests -q` there after changing the harness.
 - Independent policy check: `python .agents/hooks/verify_changes.py --base HEAD`. For a PR/CI comparison use its actual base commit; firmware PRs target `dev`.
 - Before a commit/PR, run `detect_changes(base_branch="dev", depth=2)` if available and the branch exists; otherwise review the bounded Git diff and explain the fallback.
 - Use compact terminal output: `git status -s`, `git diff --stat`, targeted diffs and short logs. Save long test output to a log and read only failure context.
@@ -49,4 +49,4 @@ Do not run firmware discovery or load every skill for unrelated Git, tooling, or
 
 Preflight hooks check supported file reads, complete editor/patch changes, generated regions, new known allocation/HAL calls, and common shell bypasses. End-of-turn hooks independently check the Git diff and run/reuse Ceedling for changed C. Repeated verification failures are surfaced rather than generating endless repair turns. Required CI remains the hard merge gate.
 
-Hooks are not a sandbox: custom scripts and specialized tools can escape preflight coverage. Do not infer hook activation/trust or successful tests from a configuration file. Setup, supported payloads, overrides and limitations are in `docs/agent-harness.md`; run the doctor when setup is uncertain.
+Hooks are not a sandbox: custom scripts and specialized tools can escape preflight coverage. Do not infer hook activation/trust or successful tests from a configuration file. Run the doctor when setup is uncertain, then review hook activation and MCP connectivity in the client. Central harness tests, documentation and CI are not installed in board repositories.

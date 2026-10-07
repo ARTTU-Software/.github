@@ -6,7 +6,7 @@ import subprocess
 import sys
 import unittest
 from helpers import Fixture, HOOKS, ROOT, SOURCE
-from doctor import CONFIGS, validate_configs
+from doctor import CONFIGS, RUNTIME_FILES, validate_configs
 
 
 class SetupTests(Fixture):
@@ -21,17 +21,23 @@ class SetupTests(Fixture):
         for name in ['.agents/skills', '.agents/tests']:
             shutil.copytree(ROOT/name, self.root/name, ignore=shutil.ignore_patterns('__pycache__'))
         for name in ['AGENTS.md','CLAUDE.md','GEMINI.md','.agents/.gitignore',
-                     '.agents/harness-manifest.json','docs/agent-harness.md',
-                     '.github/workflows/agent-harness-check.yml']:
+                     '.agents/harness-manifest.json', '.github/workflows/agent-harness-check.yml']:
             (self.root/name).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT/name, self.root/name)
 
     def test_project_configuration_contract(self):
         validate_configs(ROOT)
+        manifest = json.loads((ROOT/'.agents/harness-manifest.json').read_text())
+        self.assertEqual(manifest['files'], RUNTIME_FILES)
 
     def test_downstream_setup_does_not_require_central_sync_config(self):
         self.copy_harness()
         (self.root/'.github/sync.yml').unlink(missing_ok=True)
+        (self.root/'.agents/harness-manifest.json').unlink()
+        shutil.rmtree(self.root/'.agents/tests')
+        (self.root/'.github/workflows/agent-harness-check.yml').unlink()
+        (self.root/'.agents/hooks/sync_plan.py').unlink()
+        (self.root/'.agents/hooks/benchmark_context.py').unlink()
         validate_configs(self.root)
 
     def test_sync_omissions_and_wrong_event_names_fail_doctor(self):
