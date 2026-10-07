@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python -c \"import pathlib,runpy,sys; r=next(p for p in (pathlib.Path.cwd(),*pathlib.Path.cwd().parents) if (p/'.agents/hooks/pre_tool_enforcer.py').is_file()); sys.path.insert(0,str(r/'.agents/hooks')); runpy.run_path(str(r/'.agents/hooks/pre_tool_enforcer.py'),run_name='__main__')\" --vendor antigravity",
+            "command": "python hooks/pre_tool_enforcer.py --vendor antigravity",
             "timeout": 15
           }
         ]
@@ -15,7 +15,7 @@
     "Stop": [
       {
         "type": "command",
-        "command": "python -c \"import pathlib,runpy,sys; r=next(p for p in (pathlib.Path.cwd(),*pathlib.Path.cwd().parents) if (p/'.agents/hooks/pre_tool_enforcer.py').is_file()); sys.path.insert(0,str(r/'.agents/hooks')); runpy.run_path(str(r/'.agents/hooks/stop_gate.py'),run_name='__main__')\" --vendor antigravity",
+        "command": "python hooks/stop_gate.py --vendor antigravity",
         "timeout": 300
       }
     ]

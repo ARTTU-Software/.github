@@ -34,6 +34,9 @@ def validate_configs(root):
                     or f'--vendor {vendor}' not in handler['command']
                     or not 0 < handler.get('timeout', 0) <= 300):
                 raise ValueError(f'{vendor}: invalid command, adapter, or timeout.')
+            if vendor == 'antigravity' and handler['command'].partition(' --allow-protected ')[0] not in {
+                    f'python hooks/{script} --vendor antigravity' for script in HOOK_SCRIPTS}:
+                raise ValueError('Antigravity requires a standalone script relative to .agents; no inline Python.')
         if not all(any(script in handler['command'] for handler in handlers) for script in HOOK_SCRIPTS):
             raise ValueError(f'{vendor}: missing preflight or checkpoint script.')
     for script in HOOK_SCRIPTS:

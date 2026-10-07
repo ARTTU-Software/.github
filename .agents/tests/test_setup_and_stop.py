@@ -1,6 +1,6 @@
 import json
+import os
 import re
-import shlex
 import shutil
 import subprocess
 import sys
@@ -50,7 +50,7 @@ class SetupTests(Fixture):
         with self.assertRaises(ValueError):
             validate_configs(self.root)
 
-    def test_configured_commands_work_from_subdirectories_with_spaces(self):
+    def test_configured_commands_work_in_documented_working_directories(self):
         self.copy_harness()
         nested = self.root/'nested directory'
         nested.mkdir()
@@ -60,15 +60,55 @@ class SetupTests(Fixture):
                 events = data['arttu-guardrails'] if vendor == 'antigravity' else data['hooks']
                 group = events['preToolUse' if vendor == 'cursor' else 'PreToolUse'][0]
                 command = group['command'] if vendor == 'cursor' else group['hooks'][0]['command']
-                args = shlex.split(command)
-                args[0] = sys.executable
                 payload = {'cwd':str(self.root),'tool_name':'Read','tool_input':{'file_path':str(self.small)}}
                 if vendor == 'antigravity':
                     payload = {'workspacePaths':[str(self.root)],'toolCall':{'name':'view_file','args':{'AbsolutePath':str(self.small)}}}
-                result = subprocess.run(args,input=json.dumps(payload),text=True,capture_output=True,cwd=nested,timeout=5)
+                if vendor == 'antigravity':
+                    # Antigravity runs sh -c / cmd /c in hooks.json's directory.
+                    cwd = self.root/'.agents'
+                    shell = ([os.environ.get('COMSPEC', 'cmd.exe'), '/d', '/s', '/c', command]
+                             if os.name == 'nt' else ['/bin/sh', '-c', command])
+                else:
+                    cwd = nested
+                    shell = (['powershell.exe', '-NoProfile', '-NonInteractive', '-Command', command]
+                             if os.name == 'nt' else ['/bin/sh', '-c', command])
+                result = subprocess.run(shell,input=json.dumps(payload),text=True,capture_output=True,cwd=cwd,timeout=10)
                 self.assertEqual(result.returncode,0,result.stderr)
                 response = json.loads(result.stdout)
                 self.assertNotIn('deny',response.values())
+
+    def test_antigravity_native_shell_preserves_denials_and_stop(self):
+        self.copy_harness()
+        self.init_git()
+        events = json.loads((self.root/'.agents/hooks.json').read_text())['arttu-guardrails']
+        def launch(command, payload):
+            shell = ([os.environ.get('COMSPEC', 'cmd.exe'), '/d', '/s', '/c', command]
+                     if os.name == 'nt' else ['/bin/sh', '-c', command])
+            result = subprocess.run(shell, input=json.dumps(payload), text=True, capture_output=True,
+                                    cwd=self.root/'.agents', timeout=10)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return json.loads(result.stdout)
+        command = events['PreToolUse'][0]['hooks'][0]['command']
+        payload = {'workspacePaths':[str(self.root)], 'toolCall':{'name':'view_file',
+                   'args':{'AbsolutePath':str(self.large)}}}
+        self.assertEqual(launch(command, payload)['decision'], 'deny')
+        payload['toolCall']['args'].update(StartLine=1, EndLine=3)
+        self.assertEqual(launch(command, payload)['decision'], 'allow')
+        payload['toolCall'] = {'name':'write_to_file', 'args':{'TargetFile':str(self.app),
+                              'CodeContent':'void *p = malloc(16);'}}
+        self.assertEqual(launch(command, payload)['decision'], 'deny')
+        self.assertEqual(launch(events['Stop'][0]['command'],
+                         {'workspacePaths':[str(self.root)], 'conversationId':'test'})['decision'], 'allow')
+
+    def test_doctor_rejects_antigravity_inline_python(self):
+        self.copy_harness()
+        path = self.root/'.agents/hooks.json'
+        data = json.loads(path.read_text())
+        data['arttu-guardrails']['PreToolUse'][0]['hooks'][0]['command'] = (
+            'python -c "import sys" --vendor antigravity')
+        path.write_text(json.dumps(data))
+        with self.assertRaisesRegex(ValueError, 'standalone script'):
+            validate_configs(self.root)
 
     def test_skill_entrypoints_and_local_references(self):
         entrypoints = ['AGENTS.md', '.agents/skills/arttu-code-discovery/SKILL.md',
