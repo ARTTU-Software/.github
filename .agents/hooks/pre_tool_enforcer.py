@@ -15,6 +15,8 @@ def check_tool(name, args, root, approved=()):
     lower = name.lower()
     if lower in {'write_stdin', 'functions.write_stdin'}:
         return
+    if lower == 'mcp__renode__renode_write_memory':
+        return  # Emulated memory writes do not modify repository files.
     if lower in {'apply_patch', 'functions.apply_patch'} or lower.endswith('__apply_patch'):
         plans = patch_edits(args, root)
     elif lower in {'bash', 'shell', 'run_command', 'exec_command', 'functions.exec_command'}:

@@ -43,6 +43,18 @@ class ReadHooks(Fixture):
         self.assert_gate('mcp__markdown_docs__read_section', {'file_path':str(self.large), 'section_id':'s1'}, False)
 
 
+class DebuggerHooks(Fixture):
+    def test_renode_memory_writes_are_not_file_edits(self):
+        args = {'address': '0x20000000', 'value': '1', 'size_bytes': 4}
+        for vendor in ['claude', 'codex', 'cursor', 'antigravity']:
+            with self.subTest(vendor=vendor):
+                self.assert_gate('mcp__renode__renode_write_memory', args, False, vendor)
+
+    def test_other_write_tools_still_require_file_edits(self):
+        self.assert_gate('mcp__other__write_memory', {'address': '0', 'value': '1'}, True)
+        self.assert_gate('Write', {'file_path': str(self.main), 'content': SOURCE}, True)
+
+
 class EditHooks(Fixture):
     def test_inside_edit_and_outside_denial(self):
         for vendor in ['claude', 'codex', 'cursor']:

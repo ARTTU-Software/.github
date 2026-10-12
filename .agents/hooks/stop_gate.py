@@ -34,7 +34,17 @@ def main():
     try:
         payload = json.load(sys.stdin)
         _, _, _, cwd = normalize(payload, options.vendor)
-        root = Path(git(cwd, 'rev-parse', '--show-toplevel').stdout.decode().strip())
+        top = git(cwd, 'rev-parse', '--show-toplevel', check=False)
+        if top.returncode != 0:
+            roots = payload.get('workspacePaths', payload.get('workspace_roots', []))
+            for candidate in roots:
+                candidate_top = git(candidate, 'rev-parse', '--show-toplevel', check=False)
+                if candidate_top.returncode == 0:
+                    top = candidate_top
+                    break
+        if top.returncode != 0:
+            return emit(options.vendor, True, stop=True)
+        root = Path(top.stdout.decode().strip())
         if any(not Path(path).is_absolute() for path in options.allow_protected):
             raise ValueError('Protected-file hook exceptions need exact absolute paths.')
         approved = {str(Path(path).resolve()) for path in options.allow_protected}

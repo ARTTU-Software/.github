@@ -12,7 +12,7 @@ Use Renode MCP for interactive simulation control and GDB MCP for source diagnos
 - For regression verification, run the existing runner and required build. Do not translate the suite into agent tool calls.
 - For a failure, identify the ELF, platform, models, setup, virtual durations and assertions. Reproduce the fixture in a separate interactive instance before attaching GDB.
 - For exploration, inject faults while paused and advance bounded virtual time. Turn useful findings into regression tests when code/test changes are requested.
-- In BMS-Master, read [references/bms-master.md](references/bms-master.md). Elsewhere, discover the repository's equivalent fixture rather than copying BMS addresses or clocks.
+- Discover the current repository's simulation documentation, runner, platform and model files. Derive build commands, symbols, addresses, clocks and fault modes from that fixture; do not carry values between projects.
 
 ## Establish the session
 
