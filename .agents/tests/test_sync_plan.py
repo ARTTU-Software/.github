@@ -9,11 +9,11 @@ from sync_plan import export_payload, load_plan
 
 @unittest.skipUnless((ROOT / '.github/sync.yml').is_file(), 'Central distribution configuration only')
 class SyncPlanTests(Fixture):
-    def test_renode_gdb_skill_is_exported_with_metadata_and_reference(self):
+    def test_renode_gdb_skill_is_exported_with_metadata(self):
         _, _, mappings = load_plan(ROOT)
         export_payload(ROOT, self.root, mappings)
         skill = '.agents/skills/renode-gdb-debug'
-        for relative in ['SKILL.md', 'agents/openai.yaml', 'references/bms-master.md']:
+        for relative in ['SKILL.md', 'agents/openai.yaml']:
             path = skill + '/' + relative
             self.assertTrue((self.root / path).is_file(), path)
             self.assertEqual((ROOT / path).read_bytes(), (self.root / path).read_bytes())

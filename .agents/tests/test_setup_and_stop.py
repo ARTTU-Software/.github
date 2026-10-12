@@ -4,6 +4,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
 from helpers import Fixture, HOOKS, ROOT, SOURCE
 from doctor import CONFIGS, RUNTIME_FILES, validate_configs
@@ -139,12 +140,13 @@ class StopTests(Fixture):
         super().setUp()
         self.init_git()
 
-    def stop(self, vendor, active=False):
+    def stop(self, vendor, active=False, **overrides):
         payload = {'cwd':str(self.root),'session_id':'test','stop_hook_active':active}
         if vendor == 'antigravity':
             payload = {'workspacePaths':[str(self.root)],'conversationId':'test','executionNum':1}
         if vendor == 'cursor':
             payload['loop_count'] = int(active)
+        payload.update(overrides)
         result = subprocess.run([sys.executable,str(HOOKS/'stop_gate.py'),'--vendor',vendor],
                                 input=json.dumps(payload),text=True,capture_output=True,cwd=self.root,timeout=10)
         self.assertEqual(result.returncode,0,result.stderr)
@@ -156,6 +158,25 @@ class StopTests(Fixture):
                 response = self.stop(vendor)
                 self.assertNotEqual(response.get('decision'),'block')
                 self.assertNotEqual(response.get('decision'),'continue')
+
+    def test_non_git_workspace_allows_stop(self):
+        with tempfile.TemporaryDirectory(prefix='arttu non-git ') as outside:
+            for vendor in ['claude', 'codex', 'cursor', 'antigravity']:
+                with self.subTest(vendor=vendor):
+                    response = self.stop(vendor, cwd=outside, workspacePaths=[outside])
+                    self.assertNotEqual(response.get('decision'), 'block')
+                    self.assertNotEqual(response.get('decision'), 'continue')
+                    self.assertNotIn('systemMessage', response)
+
+    def test_workspace_fallback_still_verifies_changes(self):
+        self.main.write_text(SOURCE.replace('int generated = 0;', 'int generated = 1;'))
+        with tempfile.TemporaryDirectory(prefix='arttu non-git ') as outside:
+            for key in ['workspacePaths', 'workspace_roots']:
+                with self.subTest(key=key):
+                    response = self.stop('codex', cwd=outside, session_id=key,
+                                         **{key: [outside, str(self.root)]})
+                    self.assertEqual(response['decision'], 'block')
+                    self.assertIn('generated', response['reason'].lower())
 
     def test_failure_requests_one_repair_then_reports_limitation(self):
         self.main.write_text(SOURCE.replace('int generated = 0;','int generated = 1;'))
