@@ -39,6 +39,8 @@ jobs:
         run: |
           python .agents/hooks/sync_plan.py check
           python .agents/hooks/doctor.py --self-test
+      - name: Verify skill distribution including metadata and references
+        run: python -m unittest discover -s .agents/tests -p test_sync_plan.py -q
       - name: Read targets from sync.yml
         id: targets
         run: echo "matrix=$(python .agents/hooks/sync_plan.py matrix)" >> "$GITHUB_OUTPUT"

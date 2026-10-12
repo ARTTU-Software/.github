@@ -13,6 +13,7 @@ Skills live in `.agents/skills/<name>/SKILL.md`. Read an entry point once; load 
 | CAN IDs, pinouts, ADC/DMA configuration, hardware specifications | `arttu-docs-assistant` before design/edit |
 | Completed firmware feature or module documentation | `arttu-docs-writer` |
 | SWD, flashing, RAM/register inspection | `arttu-stm32-debugging` |
+| Renode simulation, fault injection, GDB debugging of emulated firmware | `renode-gdb-debug` |
 
 Do not run firmware discovery or load every skill for unrelated Git, tooling, or prose tasks. Resolve ambiguous hardware requirements with the developer before changing interfaces.
 
