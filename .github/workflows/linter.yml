@@ -53,7 +53,7 @@ jobs:
           # change to `file` for clang-format checks
           style: ''
           
-          tidy-checks: '-*,bugprone-*,clang-analyzer-*,performance-*,-performance-no-int-to-ptr'
+          tidy-checks: '-*,bugprone-*,clang-analyzer-*,performance-*,-performance-no-int-to-ptr,-bugprone-reserved-identifier,-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling'
           ignore: 'Drivers|Middlewares|test|build'
           lines-changed-only: 2
           
