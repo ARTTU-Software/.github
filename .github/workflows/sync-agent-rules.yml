@@ -13,9 +13,7 @@ on:
       - '.claude/**'
       - '.codex/**'
       - '.mcp.json'
-      - 'test/renode/harness/**'
-      - 'docs/renode-testing.md'
-      - '.github/workflows/renode.yml'
+      - '.github/callers/renode.yml'
       - '.github/sync.yml'
       - '.github/workflows/sync-agent-rules.yml'
   workflow_dispatch:

@@ -88,7 +88,7 @@ class RenodeReportingTests(unittest.TestCase):
 
     def test_publisher_is_separate_and_caller_grants_required_permissions(self):
         import yaml
-        caller = yaml.load((ROOT / '.github/workflows/renode.yml').read_text(), Loader=yaml.BaseLoader)
+        caller = yaml.load((ROOT / '.github/callers/renode.yml').read_text(), Loader=yaml.BaseLoader)
         publisher = self.workflow['jobs']['publish']
         self.assertEqual(publisher['needs'], 'renode')
         self.assertIn('always()', publisher['if'])

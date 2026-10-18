@@ -41,7 +41,7 @@ class SyncPlanTests(Fixture):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('central-only', result.stderr)
 
-    def test_renode_payload_reaches_stm32_without_overwriting_board_cases(self):
+    def test_renode_workflow_sync_preserves_repository_owned_tests(self):
         _, targets, mappings = load_plan(ROOT)
         self.assertIn('ARTTU-Software/STM32-Template@main', targets)
         owned = ['test/renode/run_tests.py', 'test/renode/tests.yaml',
@@ -53,10 +53,10 @@ class SyncPlanTests(Fixture):
         export_payload(ROOT, self.root, mappings)
         for path in owned:
             self.assertEqual((self.root / path).read_text(), 'board-owned sentinel\n')
-        for path in ['test/renode/harness/run_tests.py', 'test/renode/harness/tests.yaml',
-                     'test/renode/harness/requirements.txt', '.github/workflows/renode.yml',
-                     'docs/renode-testing.md']:
-            self.assertEqual((ROOT / path).read_bytes(), (self.root / path).read_bytes())
+        self.assertEqual((ROOT / '.github/callers/renode.yml').read_bytes(),
+                         (self.root / '.github/workflows/renode.yml').read_bytes())
+        self.assertFalse((self.root / 'test/renode/harness').exists())
+        self.assertFalse((self.root / 'docs/renode-testing.md').exists())
         self.assertFalse((self.root / 'templates').exists())
         self.assertFalse((self.root / '.github/workflows/renode-test.yml').exists())
 

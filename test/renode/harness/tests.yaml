@@ -1,3 +1,0 @@
-# Infrastructure-only fallback. Board suites belong in ../tests.yaml instead.
-# Native Renode test-list format; paths are relative to this file.
-- suites/monitor.robot

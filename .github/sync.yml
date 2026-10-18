@@ -48,11 +48,7 @@ group:
         dest: .agents/.gitignore
       - source: .agents/skills/
         dest: .agents/skills/
-      - source: test/renode/harness/
-        dest: test/renode/harness/
-      - source: docs/renode-testing.md
-        dest: docs/renode-testing.md
-      - source: .github/workflows/renode.yml
+      - source: .github/callers/renode.yml
         dest: .github/workflows/renode.yml
     repos: |
       ARTTU-Software/STM32-Template@main
