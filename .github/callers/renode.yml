@@ -1,0 +1,34 @@
+name: Renode Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+  pull-requests: write
+
+concurrency:
+  group: renode-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    # Unset means enabled. Set repository variable RENODE_ENABLED=false to opt out.
+    if: vars.RENODE_ENABLED != 'false' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    uses: ARTTU-Software/.github/.github/workflows/renode-test.yml@main
+    with:
+      runner: '{"group":"salita","labels":["self-hosted","Linux","X86","renode"]}'
+      # Reuse the workshop installation; set these only if it is not on PATH.
+      renode-path: ${{ vars.RENODE_PATH }}
+      renode-tests: ${{ vars.RENODE_TESTS }}
+      arm-gdb: /usr/bin/gdb-multiarch
+      # Without board commands/manifest, only the infrastructure smoke runs.
+      setup-command: ${{ vars.RENODE_SETUP_COMMAND }}
+      build-command: ${{ vars.RENODE_BUILD_COMMAND || 'python --version' }}
+      test-command: ${{ vars.RENODE_TEST_COMMAND || 'python test/renode/harness/run_tests.py' }}
+      requirements: ${{ vars.RENODE_REQUIREMENTS || 'test/renode/harness/requirements.txt' }}
+      jobs: ${{ fromJSON(vars.RENODE_JOBS || '1') }}

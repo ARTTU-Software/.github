@@ -1,4 +1,4 @@
 interface:
-  display_name: "Renode and GDB Debugging"
-  short_description: "Debug simulated firmware and preserve regression tests"
-  default_prompt: "Use $renode-gdb-debug to reproduce and diagnose a firmware failure with Renode MCP and GDB MCP."
+  display_name: "Renode Testing and GDB"
+  short_description: "Run Robot regressions and debug emulated firmware"
+  default_prompt: "Use $renode-gdb-debug to author or run Renode Robot tests and diagnose firmware failures with Renode and GDB."

@@ -1,6 +1,6 @@
 ---
 name: renode-gdb-debug
-description: Debug emulated embedded firmware using Renode MCP and GDB MCP, reproduce failures, and preserve scripted regression tests. Use for simulation control, fault injection and source debugging; physical SWD and flashing use the board's hardware-debugging workflow.
+description: Author and run Renode Robot regression tests, reproduce emulated firmware failures, and diagnose them with Renode MCP and GDB. Use for simulation testing, fault injection and source debugging; physical SWD and flashing use the board's hardware-debugging workflow.
 ---
 
 # Renode and GDB debugging
@@ -10,6 +10,7 @@ Use Renode MCP for interactive simulation control and GDB MCP for source diagnos
 ## Choose the workflow
 
 - For regression verification, run the existing runner and required build. Do not translate the suite into agent tool calls.
+- For Robot suite authoring, migration or CI adoption, read [references/robot-testing.md](references/robot-testing.md). Use the repository's `test/renode/harness/` and run guide; preserve existing board runners and assertions.
 - For a failure, identify the ELF, platform, models, setup, virtual durations and assertions. Reproduce the fixture in a separate interactive instance before attaching GDB.
 - For exploration, inject faults while paused and advance bounded virtual time. Turn useful findings into regression tests when code/test changes are requested.
 - Discover the current repository's simulation documentation, runner, platform and model files. Derive build commands, symbols, addresses, clocks and fault modes from that fixture; do not carry values between projects.

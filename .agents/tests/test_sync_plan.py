@@ -13,7 +13,7 @@ class SyncPlanTests(Fixture):
         _, _, mappings = load_plan(ROOT)
         export_payload(ROOT, self.root, mappings)
         skill = '.agents/skills/renode-gdb-debug'
-        for relative in ['SKILL.md', 'agents/openai.yaml']:
+        for relative in ['SKILL.md', 'agents/openai.yaml', 'references/robot-testing.md']:
             path = skill + '/' + relative
             self.assertTrue((self.root / path).is_file(), path)
             self.assertEqual((ROOT / path).read_bytes(), (self.root / path).read_bytes())
@@ -41,6 +41,25 @@ class SyncPlanTests(Fixture):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('central-only', result.stderr)
 
+    def test_renode_workflow_sync_preserves_repository_owned_tests(self):
+        _, targets, mappings = load_plan(ROOT)
+        self.assertIn('ARTTU-Software/STM32-Template@main', targets)
+        owned = ['test/renode/run_tests.py', 'test/renode/tests.yaml',
+                 'test/renode/suites/board.robot', 'test/renode/support/board.py']
+        for path in owned:
+            destination = self.root / path
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_text('board-owned sentinel\n')
+        export_payload(ROOT, self.root, mappings)
+        for path in owned:
+            self.assertEqual((self.root / path).read_text(), 'board-owned sentinel\n')
+        self.assertEqual((ROOT / '.github/callers/renode.yml').read_bytes(),
+                         (self.root / '.github/workflows/renode.yml').read_bytes())
+        self.assertFalse((self.root / 'test/renode/harness').exists())
+        self.assertFalse((self.root / 'docs/renode-testing.md').exists())
+        self.assertFalse((self.root / 'templates').exists())
+        self.assertFalse((self.root / '.github/workflows/renode-test.yml').exists())
+
     def test_matrix_and_render_use_configured_targets(self):
         import json
         script = ROOT / '.agents/hooks/sync_plan.py'
@@ -63,7 +82,7 @@ class SyncPlanTests(Fixture):
                             'repositories: ${{ matrix.repository }}',
                             'permission-contents: write', 'permission-pull-requests: write']:
             self.assertIn(declaration, text)
-        self.assertNotIn('permission-workflows:', text)
+        self.assertIn('permission-workflows: write', text)
 
     def test_invalid_targets_and_destination_omissions_fail(self):
         path = self.root / '.github/sync.yml'
