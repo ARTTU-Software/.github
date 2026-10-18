@@ -144,7 +144,14 @@ jobs:
       - name: Install Robot dependencies
         env:
           ROBOT_REQUIREMENTS: ${{ inputs.requirements }}
-        run: '"$RENODE_BOOTSTRAP_PYTHON" -m pip --python "$RENODE_PYTHON_ENV" install --disable-pip-version-check pip -r "$ROBOT_REQUIREMENTS"'
+        run: |
+          req="$ROBOT_REQUIREMENTS"
+          if [[ ! -f "$req" && -f "test/renode/requirements.txt" ]]; then
+            req="test/renode/requirements.txt"
+          fi
+          if [[ -f "$req" ]]; then
+            "$RENODE_BOOTSTRAP_PYTHON" -m pip --python "$RENODE_PYTHON_ENV" install --disable-pip-version-check pip -r "$req"
+          fi
       - name: Board dependency setup
         env:
           BOARD_SETUP: ${{ inputs.setup-command }}
@@ -157,7 +164,12 @@ jobs:
       - name: Run Renode regression suite
         env:
           BOARD_TEST: ${{ inputs.test-command }}
-        run: bash -e -o pipefail -c "$BOARD_TEST"
+        run: |
+          cmd="$BOARD_TEST"
+          if [[ "$cmd" == "python test/renode/harness/run_tests.py" && ! -f "test/renode/harness/run_tests.py" && -f "test/renode/run_tests.py" ]]; then
+            cmd="python test/renode/run_tests.py"
+          fi
+          bash -e -o pipefail -c "$cmd"
       - name: Preserve reports and failure evidence
         id: reports
         if: always()
