@@ -21,6 +21,9 @@ class SetupTests(Fixture):
             shutil.copyfile(ROOT/name, path)
         for name in ['.agents/skills', '.agents/tests']:
             shutil.copytree(ROOT/name, self.root/name, ignore=shutil.ignore_patterns('__pycache__'))
+        from sync_plan import export_payload, load_plan
+        _, _, mappings = load_plan(ROOT)
+        export_payload(ROOT, self.root, mappings)
         for name in ['AGENTS.md','CLAUDE.md','GEMINI.md','.agents/.gitignore',
                      '.agents/harness-manifest.json', '.github/workflows/agent-harness-check.yml']:
             (self.root/name).parent.mkdir(parents=True, exist_ok=True)
@@ -132,6 +135,8 @@ class SetupTests(Fixture):
                  else [ROOT/'.github/workflows/agent-harness-check.yml'])
         for path in paths:
             for ref in re.findall(r'uses:\s*([^\s#]+)',path.read_text()):
+                if path.name == 'renode.yml' and ref == 'ARTTU-Software/.github/.github/workflows/renode-test.yml@main':
+                    continue  # Shared workflow distribution follows main, like the Ceedling caller.
                 self.assertRegex(ref,r'^[\w.-]+/[\w./-]+@[0-9a-f]{40}$',str(path))
 
 

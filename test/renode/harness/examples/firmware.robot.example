@@ -1,0 +1,22 @@
+*** Settings ***
+Documentation     Adapt the platform, ELF, UART and boot contract before enabling.
+Resource          ../harness/renode.resource
+Suite Setup       Setup
+Suite Teardown    Teardown
+Test Setup        Boot Board
+Test Teardown     Finish Regression Test
+
+*** Test Cases ***
+Firmware Should Announce Readiness
+    [Tags]    firmware    boot    case:firmware-ready
+    Wait For Line On Uart    ${BOOT_MESSAGE}    timeout=1
+
+*** Keywords ***
+Boot Board
+    Prepare Regression Test
+    Execute Command    mach create
+    # Include any board-local C# model BEFORE loading the platform.
+    Execute Command    machine LoadPlatformDescription @"${PLATFORM}"
+    Execute Command    sysbus LoadELF @"${ELF}"
+    Create Terminal Tester    ${UART}
+    Start Emulation
