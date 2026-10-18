@@ -17,7 +17,8 @@ concurrency:
 
 jobs:
   regression:
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # Unset means enabled. Set repository variable RENODE_ENABLED=false to opt out.
+    if: vars.RENODE_ENABLED != 'false' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     uses: ARTTU-Software/.github/.github/workflows/renode-test.yml@main
     with:
       runner: '{"group":"salita","labels":["self-hosted","Linux","X86","renode"]}'

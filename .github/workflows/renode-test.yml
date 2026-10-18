@@ -3,6 +3,10 @@ name: Central Renode Robot Tests
 on:
   workflow_call:
     inputs:
+      enabled:
+        description: 'Run Renode and publish results; false skips both jobs'
+        type: boolean
+        default: true
       runner:
         description: 'JSON runs-on value: labels array or group/labels object'
         type: string
@@ -63,6 +67,7 @@ permissions:
 
 jobs:
   renode:
+    if: inputs.enabled
     permissions:
       contents: read
     runs-on: ${{ fromJSON(inputs.runner) }}
@@ -166,7 +171,7 @@ jobs:
   publish:
     name: Publish Renode test results
     needs: renode
-    if: always() && !cancelled()
+    if: always() && inputs.enabled && !cancelled()
     runs-on: ubuntu-24.04
     permissions:
       contents: read

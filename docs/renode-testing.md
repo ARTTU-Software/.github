@@ -121,12 +121,18 @@ Repository variables configure board behavior without editing shared files:
 
 | Variable | Default / purpose |
 | --- | --- |
+| `RENODE_ENABLED` | Enabled when unset; set to `false` to skip Renode and publishing |
 | `RENODE_SETUP_COMMAND` | Optional compiler/build dependency setup |
 | `RENODE_BUILD_COMMAND` | `python --version`; replace with the board ELF build |
 | `RENODE_TEST_COMMAND` | `python test/renode/harness/run_tests.py` |
 | `RENODE_REQUIREMENTS` | `test/renode/harness/requirements.txt` |
 | `RENODE_JOBS` | `1` |
 | `RENODE_PATH`, `RENODE_TESTS` | Optional installed executable/tests directory |
+
+To disable Renode for a repository, add `RENODE_ENABLED=false` under Settings >
+Secrets and variables > Actions > Variables. This skips execution and PR reporting.
+Other reusable workflow callers can pass `enabled: false`; the input defaults to
+`true`. Neither option disables the separate agent harness checks.
 
 Commands are trusted repository configuration, not issue or PR text. An existing
 board runner should honor the job's worker count and output directory:
