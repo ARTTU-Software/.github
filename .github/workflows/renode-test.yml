@@ -10,7 +10,7 @@ on:
       runner:
         description: 'JSON runs-on value: labels array or group/labels object'
         type: string
-        default: '{"group":"salita","labels":["self-hosted","Linux","X86","renode"]}'
+        default: '["renode"]'
       python-version:
         description: 'Optional setup-python version; empty reuses the installed interpreter'
         type: string

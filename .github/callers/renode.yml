@@ -21,7 +21,7 @@ jobs:
     if: vars.RENODE_ENABLED != 'false' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     uses: ARTTU-Software/.github/.github/workflows/renode-test.yml@main
     with:
-      runner: '{"group":"salita","labels":["self-hosted","Linux","X86","renode"]}'
+      runner: ${{ vars.RENODE_RUNNER || '["renode"]' }}
       # Reuse the workshop installation; set these only if it is not on PATH.
       renode-path: ${{ vars.RENODE_PATH }}
       renode-tests: ${{ vars.RENODE_TESTS }}

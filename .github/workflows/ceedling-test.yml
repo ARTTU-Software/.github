@@ -28,17 +28,30 @@ jobs:
           bundler-cache: true
 
       - name: Install Dependencies
-        run: pip install --no-cache-dir gcovr
+        run: |
+          pip install --no-cache-dir gcovr
+          if [ ! -f Gemfile ]; then
+            gem install ceedling
+          fi
 
       - name: Run Unit Tests & Coverage
         if: inputs.coverage
         run: |
           mkdir -p test/support
-          bundle exec ceedling gcov:all
+          if [ -f Gemfile ]; then
+            bundle exec ceedling gcov:all
+          else
+            ceedling gcov:all
+          fi
 
       - name: Run Unit Tests Without Coverage
         if: ${{ !inputs.coverage }}
-        run: bundle exec ceedling test:all
+        run: |
+          if [ -f Gemfile ]; then
+            bundle exec ceedling test:all
+          else
+            ceedling test:all
+          fi
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@d0a4676d0e0b938bc201470d88276b7c74c712b3 # v2
