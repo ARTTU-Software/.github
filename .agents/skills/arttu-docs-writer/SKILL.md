@@ -13,7 +13,7 @@ Write for someone interested in the car who may not know our software tools. Hel
 - Guide the reader through one real example before cataloguing implementation details. For CI, follow a proposed software change; for firmware, follow a measurement, command, or fault.
 - Introduce a technical term when it becomes useful and explain it at first use. For example: "A pull request is a proposed change that another team member can review." Avoid explaining a tool using several more unexplained tools.
 - Arrange the page in layers: purpose and small overview, guided walkthrough, design choices and limitations, then reference detail. Each section should build on the one before it.
-- Keep the opening useful to a student or design judge. Put exact paths, configuration keys, complete input tables, and commands later or in a linked reference. Do not remove necessary detail to meet an arbitrary reading-time target.
+- Keep the opening useful to a student or design judge. Put exact paths, configuration keys, complete input tables, and commands inside closed-by-default dropdowns on the same page. Use `<details>` with a descriptive `<summary>` and blank lines around Markdown content. A nearby link to another page is not a substitute for placing the detail inside the dropdown. A maintained reference can be included in the dropdown to avoid duplicating its source. Do not remove necessary detail to meet an arbitrary reading-time target.
 - Use connected paragraphs for explanations. Use lists for real sequences and tables for comparisons or lookup. Do not turn every sentence into a bullet, bold label, heading, or question-and-answer fragment.
 
 ## Plain language is required
@@ -49,7 +49,7 @@ Do not use em dashes, `&mdash;`, or `--` as prose punctuation. Use a period, com
 Use a small diagram when relationships, timing, data movement, or state changes are easier to see than describe. Give it a sentence of context and explain the consequence afterward. Labels should make sense without reading the implementation first.
 
 - Show the main path first. Separate secondary flows and detailed diagrams farther down the page. Avoid an organization-wide web of arrows in the opening.
-- Use Mermaid for maintained flow/state diagrams or a repository-owned SVG when a carefully composed overview helps. Do not generate raster artwork for a diagram that should remain editable.
+- Use Mermaid for all diagrams. Do not use generated images, hand-authored SVG, canvas, or other diagram formats. Keep an overview diagram visible and put more detailed Mermaid diagrams inside the relevant dropdowns.
 - Choose direction to fit the reading width. Use top-to-bottom on narrow pages; use parallel columns only when they improve understanding. Do not shrink dense diagrams until text becomes unreadable.
 - Quote Mermaid node labels containing special characters. Avoid raw comparison operators in labels; use words or quoted text. Validate diagram syntax.
 - Use restrained colour, meaningful grouping, readable labels, descriptive image alt text, and responsive layouts. Cards and counters must communicate verified facts, not decorate the page.
@@ -81,5 +81,5 @@ Add new pages to the relevant index/navigation. For VitePress, verify the public
 2. Read each paragraph aloud in ordinary conversation. Remove stiff phrasing, slogans, repetition, unexplained abbreviations, and unnecessary nouns made from verbs.
 3. Check that technical detail remains available and that every material claim matches its source. Make uncertainty and incomplete adoption explicit where relevant.
 4. Scan for prohibited phrases and em dashes in newly written prose. Preserve explicitly requested historical quotations unchanged and mark them historical.
-5. Build/render the changed pages, check diagrams and links, and inspect the layout at desktop and narrow widths when presentation changes. Report blocked checks accurately.
+5. Build/render the changed pages, check diagrams and links, and inspect the layout at desktop and narrow widths when presentation changes. Open each type of dropdown to verify the actual detail is inside it and its Mermaid diagrams render. Confirm technical content is collapsed initially. Report blocked checks accurately.
 6. For firmware pages, check the applicable ownership, execution, hardware, and failure details. Update the local index when adding a page.

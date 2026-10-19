@@ -2,7 +2,7 @@
 title: Agentic Harness Architecture
 description: How repository instructions and automated checks help us use coding assistants on ARTTU software.
 editLink: false
-outline: [2, 3]
+outline: 2
 ---
 
 # Using coding assistants on our software
@@ -40,6 +40,9 @@ If the change affects a pin, a CAN message, or another hardware connection, the 
 
 The repository includes short guides called **skills**. Each covers a particular kind of work, such as writing embedded C, checking hardware documentation, or debugging a board. The assistant loads the guide that applies to the task.
 
+<details>
+<summary>Which guide applies to each kind of work</summary>
+
 This keeps task-specific detail out of the general instructions. A documentation change should not require a guide to programming a microcontroller over a debug cable.
 
 | When the task involves… | The guide covers… |
@@ -51,9 +54,14 @@ This keeps task-specific detail out of the general instructions. A documentation
 | A physical board | Connecting a debugger, inspecting state, and investigating faults |
 | Simulated firmware | Reproducing failures and keeping repeatable regression tests |
 
+</details>
+
 ### Check edits before they run
 
 Coding tools can call a small program immediately before carrying out an operation. This is called a **hook**. Our pre-tool hook inspects supported reads and edits.
+
+<details>
+<summary>Generated code, protected files, and supported checks</summary>
 
 For example, STM32CubeMX generates parts of the board’s startup code. It also marks blocks where we can keep our own changes. If an assistant changes generated text outside those blocks, a later CubeMX update could erase the change. The harness checks that supported edits preserve the generated text and the existing block markers.
 
@@ -61,9 +69,14 @@ It also checks for some other common mistakes: adding recognised dynamic-memory 
 
 These checks recognise specific tools and code patterns. They cannot understand every script or prove that an edit is correct. Unsupported operations can get past the pre-tool check, which is why we also inspect the final files.
 
+</details>
+
 ### Check the result before finishing
 
 When the assistant finishes, another hook compares the files with Git’s recorded version. This catches relevant source changes even if they were made through a different editing route.
+
+<details>
+<summary>Test execution, result reuse, and failed verification</summary>
 
 For changed source or protected system files, the stop check also runs the Ceedling unit tests, or reuses a successful result when the verification inputs are unchanged. Ceedling is the test runner we use to check C code on the development computer. If configuration or dependencies are missing, verification fails and the assistant must report the problem.
 
@@ -71,15 +84,22 @@ The assistant must also run the board’s required firmware build. That produces
 
 A failed stop check asks for a correction or a clear report that verification is blocked. Repeated failures are reported without forcing an endless repair loop. The fact that an assistant has ended its turn is not a test result.
 
+</details>
+
 ## Why we keep reads small
 
 An assistant has a limited amount of working context. Filling it with unrelated files makes it harder to keep track of the task. We therefore ask it to find the relevant symbols first and read only the source needed to understand them.
+
+<details>
+<summary>Read limits, code-search coverage, and saved investigation notes</summary>
 
 Small, cohesive files can be read whole. For files longer than 200 lines, the supported file-read checks require a function extract or a window of at most 100 lines.
 
 The code-search service also reports which files it indexed. The assistant must check that information before relying on a search result, and read the source when indexing is incomplete or stale. No search result is a guarantee that every relationship has been found.
 
 For longer investigations, the assistant can save a short local note about what it learned. These notes record the source files and Git version they depend on. If those inputs change, the note must be checked again before reuse.
+
+</details>
 
 ## What we still need to check ourselves
 
@@ -91,17 +111,14 @@ The repository currently provides adapters for Antigravity, Claude Code, Codex, 
 
 ## Getting it running
 
-Start in the repository root:
+The included doctor checks the expected configuration and installed tools. After running it, check that the hooks and search services are active in the coding tool itself.
 
-```sh
-python .agents/hooks/doctor.py
-```
+<details>
+<summary>Setup command, dependencies, and client configuration</summary>
 
-The doctor checks the configuration files and expected runtime files, then reports which tools are on the computer’s search path. It does not install dependencies or confirm that hooks are active.
+<!--@include: ./harness-reference.md#setup-and-activation-->
 
-Python 3.11 or later and Git are needed for the harness checks. The configured search services also need Node.js/npm. Firmware tests and builds need the board repository’s own dependencies.
-
-After running the doctor, check hook activation and service connectivity in the coding tool. The [technical reference](/architecture/agentic-harness-reference#setup-and-activation) lists each client’s configuration paths and the commands used for verification.
+</details>
 
 ## Keeping repositories in step
 
@@ -109,9 +126,63 @@ We maintain the shared rules, skills, and checking programs in the central `.git
 
 We also test the harness itself on Windows and Linux. These tests check the checking programs and their client message formats; they do not replace board tests.
 
-The [CI/CD overview](/architecture/github) explains how this distribution fits alongside firmware builds, tests, and releases. The [harness technical reference](/architecture/agentic-harness-reference) keeps the detailed file checks, exceptions, cache behaviour, failure handling, and local verification commands.
+The [CI/CD overview](/architecture/github) explains how this distribution fits alongside firmware builds, tests, and releases.
+
+## Implementation details
+
+<details>
+<summary>Hook execution flow and verification diagram</summary>
+
+<!--@include: ./harness-reference.md#execution-flow-->
+
+</details>
+
+<details>
+<summary>Repository rules and skill names</summary>
+
+<!--@include: ./harness-reference.md#repository-rules-and-skills-->
+
+</details>
+
+<details>
+<summary>Search services, indexing checks, and context caching</summary>
+
+<!--@include: ./harness-reference.md#discovery-and-context-->
+
+</details>
+
+<details>
+<summary>Exact preflight checks and protected-file exceptions</summary>
+
+<!--@include: ./harness-reference.md#preflight-checks-->
+
+</details>
+
+<details>
+<summary>Verification commands, test caching, and failure handling</summary>
+
+<!--@include: ./harness-reference.md#verification-and-failure-handling-->
+
+</details>
+
+<details>
+<summary>Distribution targets and central CI</summary>
+
+<!--@include: ./harness-reference.md#distribution-and-ci-->
+
+</details>
+
+<details>
+<summary>Maintaining and testing the harness</summary>
+
+<!--@include: ./harness-reference.md#maintaining-the-harness-->
+
+</details>
 
 <style scoped>
+details { margin: 16px 0; padding: 16px 20px; border: 1px solid var(--vp-c-divider); border-radius: 10px; background: var(--vp-c-bg-soft); }
+summary { cursor: pointer; font-weight: 600; line-height: 1.6; }
+details[open] > summary { margin-bottom: 20px; }
 .harness-intro { margin: 24px 0; padding: 26px; border: 1px solid var(--vp-c-divider); border-top: 4px solid #d32f2f; border-radius: 14px; background: var(--vp-c-bg-soft); }
 .harness-label { margin: 0 0 14px; color: var(--vp-c-brand-1); font-size: 12px; font-weight: 800; letter-spacing: .12em; }
 .harness-lead { margin: 0 0 16px; font-size: clamp(24px, 4vw, 31px); font-weight: 700; line-height: 1.25; letter-spacing: -.025em; }

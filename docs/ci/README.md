@@ -2,7 +2,7 @@
 title: GitHub CI/CD Architecture
 description: How we test proposed software changes, build firmware, and publish releases across ARTTU repositories.
 editLink: false
-outline: [2, 3]
+outline: 2
 ---
 
 # How we check and release our software
@@ -22,9 +22,20 @@ A **workflow** is a set of instructions for GitHub to carry out, such as buildin
 
 The diagram shows the usual firmware checks. They answer different questions, so we use them together.
 
-![A proposed change runs unit tests and a firmware build. Code analysis uses the build settings. Repositories with simulation also run Renode tests. A reviewer checks the results. A version tag starts the separate release process.](./img/review-pipeline.svg)
+```mermaid
+flowchart TB
+    CHANGE["Proposed software change"] --> UNIT["Unit tests"]
+    CHANGE --> BUILD["Firmware build"]
+    CHANGE -.-> SIM["Renode tests where adopted"]
+    BUILD --> ANALYSIS["Code analysis"]
+    UNIT --> REVIEW["Review the results"]
+    ANALYSIS --> REVIEW
+    SIM --> REVIEW
+    REVIEW --> MERGE["Merge the reviewed change"]
+    TAG["Separate event: version tag"] --> RELEASE["Publish release and notify documentation"]
+```
 
-<div class="ci-jump"><a href="#follow-a-software-change">Follow a change ↓</a><a href="#publishing-a-release">See the release process ↓</a><a href="/architecture/github-reference.html">Find configuration details →</a></div>
+<div class="ci-jump"><a href="#follow-a-software-change">Follow a change ↓</a><a href="#publishing-a-release">See the release process ↓</a><a href="#configuration-and-earlier-documentation">Open the detailed dropdowns ↓</a></div>
 
 ## What each check tells us
 
@@ -40,6 +51,9 @@ A passing build means we can produce the firmware. A passing test means the test
 ## Follow a software change
 
 Suppose we change how a control unit handles a sensor reading. We want to check the calculation, confirm the firmware still builds, and give the reviewer enough information to assess the change.
+
+<details>
+<summary>How the pull request, tests, build, and code checks work</summary>
 
 ### Propose the change
 
@@ -77,7 +91,9 @@ The firmware build uses ARM GCC, CMake, and Ninja. These tools compile and link 
 | What the code checker found | The Clang-Tidy summary and review comments |
 | What happened during a simulation | The Renode result and its saved reports |
 
-The exact commands, file paths, and workflow inputs are in the [workflow reference](/architecture/github-reference). Repository settings decide which checks must pass before a change can be merged.
+Repository settings decide which checks must pass before a change can be merged. The workflow input tables are included in the configuration dropdown below.
+
+</details>
 
 ## Running firmware in Renode
 
@@ -92,6 +108,9 @@ flowchart TB
     SAVE --> PUBLISH["Publish test results and execution status"]
 ```
 
+<details>
+<summary>How simulation results are published and which repositories use it</summary>
+
 Keeping publication separate means the machine running the simulation does not need permission to write pull-request comments. Reports are retained for 14 days so a developer can inspect a failure after the run.
 
 The published status also reports when execution failed or no test report was produced. A setup error should not be mistaken for a test that passed.
@@ -103,6 +122,8 @@ STM32-Template includes a starter Renode caller. Existing board repositories ado
 BMS-Master and STM32-Template have shared Renode callers in the revisions reviewed for this page. Telemetry has its own Docker-based simulation workflow. The [repository snapshot](/architecture/github-reference#repository-adoption-snapshot) records these differences and the inspected revisions.
 
 The template caller can be run manually or for a pull request from the same repository after it is ready for review. It excludes fork and draft pull requests. The central workflow also skips draft pull requests. The template selects the workshop runner; repository variables select commands, paths, and number of test workers. `RENODE_ENABLED=false` turns it off. These settings are listed in the [Renode reference](/architecture/github-reference#renode-execution-and-reporting).
+
+</details>
 
 ## Publishing a release
 
@@ -118,6 +139,9 @@ flowchart TB
     NOTIFY --> DOCS["Rebuild and deploy the documentation site"]
 ```
 
+<details>
+<summary>Release files and documentation deployment</summary>
+
 Artifact downloads are optional in the release workflow. A release can therefore be published without the expected firmware files if the download failed or no files matched. Check the release assets before using them.
 
 ### Updating the documentation site
@@ -128,9 +152,14 @@ The site reads product documentation through Git submodules, which record a part
 
 The [publishing guide](/getting-started/publishing-docs) explains how to update those references. Deployment credentials and server procedures belong with the repository that performs the deployment.
 
+</details>
+
 ## Updating the tools across repositories
 
 The reusable build and test workflows are called from the central repository. Some development tools instead need files copied into each project: assistant instructions, skills, and local checking programs. Renode callers stay with the template or board repository that owns them.
+
+<details>
+<summary>Update targets and the synchronization process</summary>
 
 We maintain a list of ten update targets: CAN-Gateway, ECU, Dashboard, Telemetry, LVSOC-26, Galvanic-Isolator, common, BMS-Master, STM32-Template, and utilities. The first eight target `dev`; the template and utilities target `main`.
 
@@ -139,6 +168,8 @@ When relevant tooling changes reach central `main`, the synchronization workflow
 The workflow uses a GitHub App identity to create those requests. It batches the files into one commit, adds labels, and tries to mark the request as a draft. The conversion can fail, so its result needs checking. A developer must still review and merge the update; being on the target list does not mean a repository already has it.
 
 The [agent harness page](/architecture/agentic-harness) explains what the assistant instructions and local checks do.
+
+</details>
 
 ## Checking the shared tools themselves
 
@@ -159,13 +190,51 @@ The inspected product repositories also use shared label rules. Labels identify 
 
 ## Configuration and earlier documentation
 
-The [workflow reference](/architecture/github-reference) contains the full input tables, permissions, report locations, repository snapshot, and troubleshooting notes. It also lists all eight central workflow files, including the six that other workflows can call.
+Open a dropdown for the input tables, configuration, and failure checks. The content is included here from the maintained reference.
+
+<details>
+<summary>Workflow inputs, build outputs, permissions, and reporting</summary>
+
+<!--@include: ./reference.md#workflow-contracts-->
+
+</details>
+
+<details>
+<summary>Repository adoption and inspected revisions</summary>
+
+<!--@include: ./reference.md#repository-adoption-snapshot-->
+
+</details>
+
+<details>
+<summary>Shared pull-request labels and file patterns</summary>
+
+<!--@include: ./reference.md#shared-pr-labels-->
+
+</details>
+
+<details>
+<summary>Finding the cause of a failed check</summary>
+
+<!--@include: ./reference.md#finding-the-right-failure-evidence-->
+
+</details>
+
+<details>
+<summary>Maintaining these pages</summary>
+
+<!--@include: ./reference.md#updating-these-pages-->
+
+</details>
 
 The [historical page](/architecture/github-history) preserves the complete previous documentation and diagrams. It is marked historical because some counts and repository details have changed.
 
 We maintain the current pages in `.github/docs/ci/`, alongside the shared workflows. The documentation hub reads them through its submodule and keeps the existing public URL.
 
 <style scoped>
+details { margin: 16px 0; padding: 16px 20px; border: 1px solid var(--vp-c-divider); border-radius: 10px; background: var(--vp-c-bg-soft); }
+summary { cursor: pointer; font-weight: 600; line-height: 1.6; }
+details[open] > summary { margin-bottom: 20px; }
 .ci-intro { margin: 24px 0; padding: 28px; border: 1px solid var(--vp-c-divider); border-top: 4px solid #d32f2f; border-radius: 14px; background: var(--vp-c-bg-soft); }
 .ci-eyebrow { margin: 0 0 14px; color: var(--vp-c-brand-1); font-size: 12px; font-weight: 800; letter-spacing: .12em; }
 .ci-statement { margin: 0 0 14px; font-size: clamp(25px, 4vw, 33px); line-height: 1.25; font-weight: 700; letter-spacing: -.025em; color: var(--vp-c-text-1); }
