@@ -146,4 +146,4 @@ python .agents/hooks/verify_changes.py --base HEAD
 
 When documentation changes, commit the updated page in `.github`, publish that commit through the agreed branch, then update `repos/agent-harness` in the documentation repo and run `npm run docs:build`. The hub retains its existing public route through a VitePress rewrite. Deployment keeps this submodule at the recorded commit; the other product submodules retain their release-tag policy.
 
-Historical performance percentages and quality scores from the previous page are omitted: they are not reproducible evidence for the current harness. `benchmark_context.py` measures instruction entry-point bytes against a Git base; it does not measure paid/model tokens or firmware correctness.
+The [earlier benchmark results](/architecture/agentic-harness-benchmarks) preserve the previous run comparison and pie charts as historical data. `benchmark_context.py` measures instruction entry-point bytes against a Git base; it does not measure paid/model tokens or firmware correctness.
