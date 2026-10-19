@@ -286,7 +286,18 @@ typedef enum {
 } inverter_state_t;
 ```
 
-Keep documentation dense and technical. Avoid redundant filler text that merely repeats the function name.
+Write documentation in plain language that a teammate learning the module can understand. Include the technical facts needed to use the interface safely: units, valid ranges, ownership, execution context, and failure behavior where applicable. Avoid filler that repeats the function name and vague claims such as "seamlessly manages" or "ensures robustness."
+
+Inside function bodies, explain non-obvious ordering, state transitions, timing choices, concurrency assumptions, and recovery decisions near the relevant code. Use enough sentences to explain the reason and consequence; do not impose a comment quota or a one-line limit. Straightforward assignments do not need narration. Keep comments accurate when behavior changes, and verify hardware explanations rather than guessing.
+
+For example, if the implementation actually waits for a fresh command after a timeout:
+
+```c
+/* Vague: Gracefully orchestrate robust recovery from stale communication. */
+/* Useful: Keep torque disabled until a fresh command arrives after the timeout. */
+```
+
+Use the Readable code and useful comments section in [the skill entry point](../SKILL.md) for function-body readability rules. Concise documentation still needs to explain the contract; it does not mean dense code or missing rationale.
 
 ---
 
