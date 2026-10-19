@@ -1,138 +1,85 @@
 ---
 name: arttu-docs-writer
-description: Generate and update system-level architectural documentation for embedded firmware modules inside local board repositories (./docs/modules/). Triggers when completing a firmware feature, module, state machine, or refactor to document dataflow, concurrency models, hardware interfaces, and failure recovery. Forbids line-by-line code walks, AI-style buzzwords, and em dashes. Do NOT use for reading or querying existing documentation (use arttu-docs-assistant), enforcing C coding standards (use arttu-cstyle), or on-target debugging (use arttu-stm32-debugging).
+description: Write or revise ARTTU engineering documentation, including firmware modules, architecture, and development tooling. Explain systems in plain language for students and design judges, then guide readers into technical detail. Use for requested documentation and after firmware features or refactors. Hardware specification lookup uses arttu-docs-assistant; C review and hardware debugging use their respective skills.
 ---
 
-# Embedded Documentation Writer Guide
+# Engineering documentation
 
-Guides the agent in writing and maintaining system-level, architectural documentation for embedded firmware modules directly inside board repositories.
+Write for someone interested in the car who may not know our software tools. Help them understand what happens, why we chose it, and where to look next. Technical depth belongs after the reader has enough context to use it.
 
-Priority order: **System Architecture > Concurrency & Flow > Hardware Coupling > Code Anchors**.
+## Audience and reading order
 
----
+- Start with the concrete purpose in ordinary language. Explain what the system does for us and the problem it addresses. Do not open with an acronym list, component inventory, slogan, or performance claim.
+- Guide the reader through one real example before cataloguing implementation details. For CI, follow a proposed software change; for firmware, follow a measurement, command, or fault.
+- Introduce a technical term when it becomes useful and explain it at first use. For example: "A pull request is a proposed change that another team member can review." Avoid explaining a tool using several more unexplained tools.
+- Arrange the page in layers: purpose and small overview, guided walkthrough, design choices and limitations, then reference detail. Each section should build on the one before it.
+- Keep the opening useful to a student or design judge. Put exact paths, configuration keys, complete input tables, and commands later or in a linked reference. Do not remove necessary detail to meet an arbitrary reading-time target.
+- Use connected paragraphs for explanations. Use lists for real sequences and tables for comparisons or lookup. Do not turn every sentence into a bullet, bold label, heading, or question-and-answer fragment.
 
-## 1. Core Philosophy: Systems Over Code
+## Plain language is required
 
-Explain runtime behavior, not C source code line-by-line.
+Use concrete subjects and active verbs: "The build produces a firmware file" rather than "The pipeline facilitates artifact generation." Use "we" when describing a verified team decision; do not invent intent, history, or benefits.
 
-* **Module Ownership**: Define boundaries and responsibilities against the rest of the vehicle.
-* **Concurrency & Lifecycles**: Detail interactions between threads, ISRs, and hardware peripherals.
-* **Architectural Rationale**: State why designs exist (e.g. ping-pong buffers for flash latency, seqlocks to avoid ISR stalls).
-* **Zero Code Narration**: Never narrate code statements or line numbers. Invariants endure; syntax changes.
+Remove stock AI phrasing, sales language, and ornamental transitions. Prohibited examples include "delve", "deep dive", "leverage", "foster", "seamlessly", "robust", "comprehensive", "pivotal", "crucial", "a testament to", "unlock", "empower", "at its core", "in today's", "it is worth noting", and "importantly". A banned-word scan is a final check, not a substitute for editing the argument.
 
----
+Also remove these patterns even when no banned word appears:
 
-## 2. Triggering & Scope Rules
+- slogans such as "From code to confidence" or "Turning changes into evidence";
+- vague labels such as "software assurance ecosystem" when "software checks" says what we mean;
+- repeated claims about reliability, quality, efficiency, or safety without a specific mechanism and evidence;
+- empty contrasts such as "This isn't just X; it's Y";
+- sentences announcing that a section is important or that the reader can explore it;
+- repeated summaries that restate the opening without adding an implication or next action.
 
-* **Trigger Point**: Activate when a feature, driver, state machine, or significant refactor is completed, or when the user explicitly requests module documentation.
-* **Target Location**: Write or update files in `./docs/modules/<category>/<module>.md` within the local firmware repository.
-* **Surgical Scope**: Touch only the documentation pages directly affected by the current code changes. Never re-audit, reformat, or touch unrelated documents.
-* **Local Index Linking**: When adding a new module document, add its reference to `./docs/modules/index.md` or the relevant category index page.
+Prefer ordinary words where they preserve meaning: "use", "check", "shared", "copy", "failure", "result". Keep established technical names when needed, but explain them. Do not replace precision with vague simplifications.
 
----
+Do not use em dashes, `&mdash;`, or `--` as prose punctuation. Use a period, comma, colon, or parentheses. Command options such as `--base` remain valid.
 
-## 3. Strict Engineering Voice & Anti-AI Banlist
+## Explain decisions and limits
 
-Firmware engineers require dense, high-signal technical information. Synthetic AI prose is strictly forbidden.
+- Support material behavior with current code/configuration and the applicable evidence workflow. Distinguish approved hardware requirements from observed implementation.
+- State a design choice together with its reason or consequence: "Lint waits for the build because it needs the compiler settings."
+- Say what happens when something fails, who sees it, and what happens next. Explain disabled, optional, or partially adopted behavior where it matters.
+- Distinguish a configured workflow from a successful run, a passing test from complete coverage, and simulation from hardware verification. State relevant limits once beside the claim; avoid repeated defensive disclaimers.
+- Never invent measurements, deployment status, branch protection, design rationale, hardware facts, or guarantees. Date adoption snapshots and identify their source revisions when those facts can change.
+- Preserve useful material when restructuring. Move detailed contracts into a maintained reference. Keep explicitly requested historical content clearly dated and separated from current guidance.
 
-### Prohibited Writing Patterns
-* **Zero Em Dashes**: Never use em dashes (`—`, `&mdash;`, or `--` as dash). Use colons, parentheses, commas, or hyphens.
-* **Zero Filler Introductions**: Start immediately with the module's concrete function.
-* **Zero AI Buzzwords**: Banned: "seamlessly", "testament to", "crucial", "robust", "delve", "deep dive", "pivotal role", "leverage", "comprehensive suite", "it is worth noting that".
-* **Zero Code Narration & Boilerplate**: No line-by-line walks or dumping function prototypes.
+## Diagrams and layout
 
-### Required Engineering Voice
-* **Dense & Concise**: State facts, show the diagram, give the numbers, stop. Under 2 minutes to read.
-* **First-Person Team Perspective**: When referencing the team, use "we", "us", or "our" instead of third-person ("the team", "the developers").
-* **Concrete Parameters & Units**: Specify rates (50 Hz), buffers (16 KiB), timeouts (10 ms), baud (1 Mbps).
-* **Explicit Trade-Offs**: State failure modes directly (e.g. "slow SD drops samples, never blocks execution").
+Use a small diagram when relationships, timing, data movement, or state changes are easier to see than describe. Give it a sentence of context and explain the consequence afterward. Labels should make sense without reading the implementation first.
 
----
+- Show the main path first. Separate secondary flows and detailed diagrams farther down the page. Avoid an organization-wide web of arrows in the opening.
+- Use Mermaid for maintained flow/state diagrams or a repository-owned SVG when a carefully composed overview helps. Do not generate raster artwork for a diagram that should remain editable.
+- Choose direction to fit the reading width. Use top-to-bottom on narrow pages; use parallel columns only when they improve understanding. Do not shrink dense diagrams until text becomes unreadable.
+- Quote Mermaid node labels containing special characters. Avoid raw comparison operators in labels; use words or quoted text. Validate diagram syntax.
+- Use restrained colour, meaningful grouping, readable labels, descriptive image alt text, and responsive layouts. Cards and counters must communicate verified facts, not decorate the page.
+- Keep warnings for a decision or failure readers need to act on. Use the repository's established GitHub alerts or VitePress containers. Avoid filling the page with badges and callouts.
 
-## 4. Checklist-Driven Module Blueprint
+## Firmware-specific detail
 
-Every generated or updated module page must answer the following core engineering questions:
+Explain runtime behavior rather than narrating C statements. For firmware modules, cover these where applicable after the introductory walkthrough:
 
-### 1. Responsibility & Boundaries
-* What physical problem does this module solve?
-* What does this module own vs what does the rest of the car or firmware own?
+- responsibility, module ownership, and interfaces to the rest of the car;
+- execution context (task, ISR, DMA, callback, or main loop), triggers, rates, and priorities;
+- producers, consumers, shared-state ownership, and synchronization;
+- relevant hardware interfaces, approved CAN IDs/pins, physical units, and buffer sizes;
+- timeouts, stalled consumers, dropped data or backpressure, faults, and recovery.
 
-### 2. Concurrency & Execution Context
-* Which execution context runs this code: FreeRTOS/ThreadX thread, timer callback, ISR, DMA stream, or main loop?
-* What are the execution rates, task priorities, and wake triggers (semaphore, event flags, timer)?
-* How is shared state synchronized (seqlocks, mutexes, ring buffers, atomic primitives)?
+Include a flow or state diagram when handoffs or transitions matter. Use exact verified units and parameters; explain their effect rather than listing numbers without context. For implemented mathematical models, use LaTeX math and define variables and units. Avoid unrelated textbook derivations.
 
-### 3. Dataflow or State Machine (Mermaid Diagram Mandatory)
-Whenever data movement, concurrency handoffs, or state transitions exist, include a Mermaid diagram using the conventions below (self-contained; no external template file is required):
-* **The Column Layout (Multi-Process Flows)**:
-  * Top-level flowchart must be Left-to-Right (`flowchart LR`).
-  * Group major concurrent pathways into separate `subgraph` blocks (e.g. Producers, Shared State, Consumers).
-  * Set the internal direction of each subgraph to Top-to-Bottom (`direction TB`) so flows run down parallel columns that fit widescreen viewports.
-* **Per-Diagram Zoom Control (`data-zoom`)**:
-  * For standard layouts, omit wrapper (defaults to 1.0).
-  * For dense, multi-column diagrams, wrap in `<div data-zoom="0.8">` or `0.9` so the entire layout is visible on initial load.
-  * For small diagrams needing larger text, use `<div data-zoom="1.15">`.
-* **Flow Lines & Connections**:
-  * Use solid arrows (`-->`) with concise label text for primary data or transition flow.
-  * Use dotted arrows (`-.->`) for secondary connections (such as asynchronous helper calls or notifications) to keep the primary flow clean.
-* **Mermaid Syntax Invariants (Zero Parse Errors)**:
-  * Never use comparison operators (`<`, `>`, `<=`, `>=`) inside edge labels `|...|` or decision shapes `{...}`. Mermaid treats `<` and `>` as arrowheads/HTML tags. Use words (e.g. `Exceeds 15%`, `Positive`) or double quotes.
-  * Double-quote node labels containing parentheses, brackets, colons, or carets: `NODE["Label (Details)"]`.
-* **State Machines**: Use `stateDiagram-v2` or `flowchart TD` for discrete state controllers, fault branches, and recovery loops.
+Do not paste complete functions or give line-by-line code walks. Small interface tables, important data structures, or a short synchronization example are appropriate only when they help the explanation. Cite source identifiers sparingly. Link to maintained source pages only where useful and valid; never use `file:///` links.
 
-### 4. Hardware & Peripheral Wiring
-* Document hardware coupling: UART, FDCAN, SPI, I2C, ADC, Timers, DMA streams.
-* Document physical constraints: CAN IDs, pinouts, baud rates, and DMA chunk sizes.
+## Scope and publication
 
-### 5. Failure Modes & Buffering Policies
-* What happens when downstream consumers stall (e.g., dropped packets vs backpressure)?
-* How does the module handle bus-off errors, timeouts, or sensor disconnects?
-* How does the module bound data loss during unexpected power cuts?
+Update only pages and indexes needed by the request. Firmware module pages normally live in `docs/modules/<category>/<module>.md`; shared tooling documentation lives in the owning repository's `docs/`. Honour an explicitly requested location.
 
-### 6. GitHub-Flavored Alerts for Nuances
-Use GitHub-style alerts instead of raw container syntax:
-* `> [!NOTE]` for operational background or live file maintenance notices.
-* `> [!TIP]` for architectural rationale and design choices.
-* `> [!WARNING]` for active work-in-progress, disabled toggles, or known caveats.
-* `> [!CAUTION]` for hardware risk, bus-off locks, or memory corruption hazards.
+Add new pages to the relevant index/navigation. For VitePress, verify the public rewrite, actual heading anchors, and relative links after rendering. Preserve existing public routes during a move. Keep deployment instructions in the repository that owns deployment.
 
-### 7. LaTeX Math Equations (When Applicable)
-When documenting mathematical models (Kalman filters, sensor scaling, torque calculations, or filter cutoff frequencies), use LaTeX math syntax:
-* **Inline Math**: Use single dollar signs: `$f_s = 1\text{ kHz}$`, `$\tau = R \cdot C$`.
-* **Display Math**: Use double dollar signs for formulas:
-  ```latex
-  $$V_{\text{out}} = \frac{\text{ADC}_{\text{raw}} \cdot V_{\text{ref}}}{2^{12} - 1}$$
-  ```
-* Define physical variables and units directly below the formula. Show only the applied formula implemented in code, avoiding textbook theoretical derivations.
+## Final editing and verification pass
 
----
-
-## 5. Code Anchoring & Referencing Policy
-
-* **No Full Function Bodies**: Never paste full C functions. Permitted: key structs, atomic/seqlock primitives, or concise API tables.
-* **Zero Source Code Links**: Source files (`.c`, `.h`, `.py`) are not web pages. Never hyperlink them or write `file:///` URLs. Cite them strictly in inline backticks (e.g. `can_driver.c`, `system_var.h`).
-* **VitePress Route Resolution**:
-  * Cross-reference `.md` pages using clean relative paths without `.md` extension (e.g., `[CAN Driver](../communication/can-driver)`).
-  * Root board overview pages (e.g., `/firmware/can-gateway`) resolve relative `./modules/` as `/firmware/modules/` (404); use full routes (e.g., `/firmware/can-gateway/modules/`).
-  * Never invent anchor hashes (`#some-anchor`); only link to anchors that exist as real heading IDs on the target page.
-
----
-
-## 6. Pre-Submission Quality Checklist
-
-Before finalizing any documentation page, verify:
-
-* [ ] Text is short, concise, and stripped of narrative filler.
-* [ ] GitHub-flavored alerts used (`> [!NOTE]`, `> [!TIP]`, `> [!WARNING]`, `> [!CAUTION]`).
-* [ ] LaTeX math formatted with `$...$` or `$$...$$` if mathematical equations exist.
-* [ ] Zero hyperlinks to source files (`.c`, `.h`); cited only as inline backticks.
-* [ ] Documentation links omit `.md` extension and target real routes and existing anchors.
-* [ ] Mermaid diagrams contain zero unquoted comparison operators (`<`, `>`) or unquoted special characters.
-* [ ] Zero em dashes present anywhere in the document.
-* [ ] Zero banned AI buzzwords ("seamlessly", "crucial", "robust").
-* [ ] Zero line-by-line code walkthroughs.
-* [ ] Mermaid diagram included if dataflow or states exist.
-* [ ] Concurrency and execution context explicitly identified (threads, ISRs, rates).
-* [ ] Concrete numbers and units provided for all buffers, rates, and timeouts.
-* [ ] Team referenced with "we"/"us"/"our" rather than third-person names.
-* [ ] Local `modules/index.md` updated if a new file was created.
+1. Read the opening as someone who does not know the tools. Can they explain the purpose and follow the example? Rewrite sentences that depend on unstated background.
+2. Read each paragraph aloud in ordinary conversation. Remove stiff phrasing, slogans, repetition, unexplained abbreviations, and unnecessary nouns made from verbs.
+3. Check that technical detail remains available and that every material claim matches its source. Make uncertainty and incomplete adoption explicit where relevant.
+4. Scan for prohibited phrases and em dashes in newly written prose. Preserve explicitly requested historical quotations unchanged and mark them historical.
+5. Build/render the changed pages, check diagrams and links, and inspect the layout at desktop and narrow widths when presentation changes. Report blocked checks accurately.
+6. For firmware pages, check the applicable ownership, execution, hardware, and failure details. Update the local index when adding a page.

@@ -1,149 +1,119 @@
 ---
 title: Agentic Harness Architecture
-description: Current ARTTU agent rules, tool checks, verification, and distribution.
+description: How repository instructions and automated checks help us use coding assistants on ARTTU software.
 editLink: false
+outline: [2, 3]
 ---
 
-# Agentic Harness Architecture
+# Using coding assistants on our software
 
-The harness combines repository instructions, task-specific skills, Python tool checks, and independent Git diff verification for ARTTU firmware work. This page describes the implementation reviewed on 19 October 2026.
+<div class="harness-intro">
+<p class="harness-label">DEVELOPMENT TOOLS</p>
+<p class="harness-lead">We give coding assistants the same project rules, then check the changes they make.</p>
+<p>An assistant working on our firmware needs to know which files it can change, how the board is organised, and which tests to run. The agent harness brings those instructions and checks together in each repository.</p>
+</div>
 
-The canonical source is `ARTTU-Software/.github/docs/agentic-harness.md`. The documentation hub consumes this repository through its `repos/agent-harness` submodule and publishes this page at `/architecture/agentic-harness`. Edit the source in `.github`, then update the documentation repository's submodule commit.
+We use the word **harness** for this collection of project rules, writing and debugging guides, and small programs that check the assistant’s work. It runs on the developer’s computer through the coding tool they use. It is separate from the checks GitHub runs when someone proposes a change.
 
-## Setup and activation
-
-Run from the repository root:
-
-```sh
-python .agents/hooks/doctor.py
-```
-
-Python 3.11 or later is needed (`doctor.py` imports `tomllib`). Git is required for diff verification and evidence caching. Node.js/npm supplies `npx` for the configured MCP servers. Firmware verification also needs the board's Ceedling dependencies and target build tools.
-
-The doctor validates configuration shapes, adapter selection, runtime files, matching MCP definitions and, in the central repository, sync completeness. It reports executables found on PATH. It does **not** establish hook activation, workspace trust, MCP connectivity, or successful firmware tests. Check those in the actual client's hook and MCP settings.
-
-| Client adapter | Hook configuration | MCP configuration |
-| --- | --- | --- |
-| Antigravity | `.agents/hooks.json` | Import the server entries from `.mcp.json` into client settings |
-| Claude Code | `.claude/settings.json` | `.mcp.json` |
-| Codex | `.codex/hooks.json` | `.codex/config.toml` |
-| Cursor | `.cursor/hooks.json` | `.cursor/mcp.json` |
-
-These are the adapters shipped and tested by this repository. Client acceptance and execution must be checked locally. The Antigravity hook commands are relative to `.agents`; the other hook commands locate the harness by walking up from the current working directory. Preflight timeouts are 15 seconds; stop timeouts are 300 seconds. Cursor preflight specifies `failClosed: true` and its stop hook has `loop_limit: 1`.
-
-## Execution flow
+The diagram below follows one change. The assistant first reads the relevant instructions, works on the task, and checks its changes before handing them back for review.
 
 ```mermaid
-flowchart TD
-    R[Repository rules and applicable skill] --> D[Graph or bounded source discovery]
-    D --> T[Agent tool request]
-    T --> P[Preflight adapter and supported-operation checks]
-    P --> E[Native tool execution]
-    E --> M[Milestone tests and target build]
-    M --> S[Stop hook: independent Git diff policy]
-    S --> C[Run or reuse Ceedling when source plans exist]
-    C --> V[Report results and unresolved failures]
-    V --> CI[Repository CI and review]
+flowchart TB
+    TASK["A developer asks for a change"] --> READ["Read project rules and find the relevant code"]
+    READ --> EDIT["Make the change"]
+    EDIT --> CHECK["Check the resulting files and run tests"]
+    CHECK --> REVIEW["Developer reviews the result"]
+    REVIEW --> GITHUB["GitHub runs the repository's checks"]
 ```
 
-The preflight hook reconstructs supported edits before execution. The stop hook examines the resulting working tree independently. CI can run the same policy script against an explicit comparison commit. Instructions still govern requirements the scripts cannot establish, including hardware correctness, bounded waits, ISR behavior, and the required target build.
+The instructions guide the work. The automated checks catch some mistakes. A developer still needs to review the result, especially when it affects hardware.
 
-## Repository rules and skills
+## Follow a small firmware change
 
-`AGENTS.md` supplies the shared policy. `CLAUDE.md` and `GEMINI.md` provide client entry points. Load only the skill relevant to the task:
+Suppose we ask an assistant to change how a sensor reading is processed. Before editing, it needs to find where the reading comes from, which part of the firmware uses it, and what should happen if the sensor stops responding.
 
-| Skill | Responsibility |
+The repository’s instructions direct it to inspect those relationships first. A code-search service can help find functions and their callers without reading many unrelated files. When that service is unavailable, the assistant can read the relevant source directly and explain what it could not verify.
+
+If the change affects a pin, a CAN message, or another hardware connection, the assistant must check the agreed specifications before changing the interface. Code alone does not establish what the hardware was intended to do.
+
+### Give it the right guide
+
+The repository includes short guides called **skills**. Each covers a particular kind of work, such as writing embedded C, checking hardware documentation, or debugging a board. The assistant loads the guide that applies to the task.
+
+This keeps task-specific detail out of the general instructions. A documentation change should not require a guide to programming a microcontroller over a debug cable.
+
+| When the task involves… | The guide covers… |
 | --- | --- |
-| `arttu-code-discovery` | Graph discovery, callers, dataflow, impact, and evidence cards |
-| `arttu-cstyle` | Embedded C safety and coding conventions |
-| `arttu-docs-assistant` | Verify hardware specifications, CAN definitions, and mappings before interface changes |
-| `arttu-docs-writer` | System-level module documentation after firmware changes |
-| `arttu-stm32-debugging` | Physical STM32 SWD, flashing, RAM/register inspection, and fault analysis |
-| `renode-gdb-debug` | Emulated firmware regression, fault injection, and GDB diagnosis |
+| Unfamiliar code | Finding the relevant functions, callers, and data flow |
+| Embedded C | Memory use, execution limits, and coding conventions |
+| Hardware interfaces | Checking specifications and resolving disagreements |
+| Documentation | Explaining the system before introducing implementation detail |
+| A physical board | Connecting a debugger, inspecting state, and investigating faults |
+| Simulated firmware | Reproducing failures and keeping repeatable regression tests |
 
-Hardware contracts must be resolved before changing interfaces. Application/domain code uses BSP, driver, or interface abstractions. Runtime allocation is forbidden; ISR work and hardware waits must remain bounded. These broader engineering requirements need source review and appropriate tests.
+### Check edits before they run
 
-## Discovery and context
+Coding tools can call a small program immediately before carrying out an operation. This is called a **hook**. Our pre-tool hook inspects supported reads and edits.
 
-The configured MCP packages are `codebase-memory-mcp@0.11.0` and `markdown-docs-mcp@0.1.5`. `mcp_launcher.py` accepts only its reviewed package/version allowlist and launches `npx -y` from the repository root, including Windows `.cmd` handling. The Markdown server's TOC and section byte limits are both 8192.
+For example, STM32CubeMX generates parts of the board’s startup code. It also marks blocks where we can keep our own changes. If an assistant changes generated text outside those blocks, a later CubeMX update could erase the change. The harness checks that supported edits preserve the generated text and the existing block markers.
 
-For structural code questions, resolve the nearest indexed project and current generation, then use `search_graph`, `trace_path`, and `get_code_snippet`. Default to Verify evidence: exact source for material behavior, relevant caller/callee checks, and relevant pagination. Scout findings are provisional; negative or exhaustive conclusions need bounded scope verification.
+It also checks for some other common mistakes: adding recognised dynamic-memory calls, putting recognised hardware-access calls in application code, or changing protected system files without an approved exception.
 
-Call `check_index_coverage` with every evidence path and the relevant scopes. Read reported gaps or stale source directly. A clean coverage report is a best-effort signal. Missing MCP connectivity permits targeted source fallback; record that limitation and continue work whose facts can be established locally.
+These checks recognise specific tools and code patterns. They cannot understand every script or prove that an edit is correct. Unsupported operations can get past the pre-tool check, which is why we also inspect the final files.
 
-Whole-file reads are permitted for cohesive files of at most 200 lines. For larger files, use graph snippets or windows of at most 100 lines. A portable fallback is:
+### Check the result before finishing
 
-```sh
-python .agents/hooks/read_context.py path/to/source.c --start 40 --end 90
-```
+When the assistant finishes, another hook compares the files with Git’s recorded version. This catches relevant source changes even if they were made through a different editing route.
 
-`context_cache.py` stores local evidence cards under `.agents/state/context`. Cards contain a scope and selected facts, relationships, unknowns, checks, and coverage. Each card is limited to 8 KiB and records HEAD, named source-file hashes, and an optional graph generation. A changed HEAD, source hash, missing file, or mismatched/unspecified recorded generation invalidates reuse. Cached conclusions still require revalidation when their scope or safety assumptions change.
+For changed source or protected system files, the stop check also runs the Ceedling unit tests, or reuses a successful result when the verification inputs are unchanged. Ceedling is the test runner we use to check C code on the development computer. If configuration or dependencies are missing, verification fails and the assistant must report the problem.
 
-## Preflight checks
+The assistant must also run the board’s required firmware build. That produces code for the microcontroller; it is a separate check from host unit tests and is not run automatically by the stop hook.
 
-`pre_tool_enforcer.py` normalizes client payloads through `hook_io.py`, rejects payloads over 2 MiB, then dispatches by tool name. `edit_plan.py` and `patch_plan.py` reconstruct complete supported mutations, including multi-edit operations, and reject missing or ambiguous context. `policy.py` evaluates the proposed before/after content.
+A failed stop check asks for a correction or a clear report that verification is blocked. Repeated failures are reported without forcing an endless repair loop. The fact that an assistant has ended its turn is not a test result.
 
-| Check | Implemented behavior |
-| --- | --- |
-| Reads | Recognized file reads enforce the 200-line whole-file / 100-line window policy. Markdown section reads are delegated to the section tool. |
-| Generated C/H | Files with USER CODE markers, plus recognized root `main` and STM32 interrupt/MSP files, receive generated-text checks. Existing generated bytes and marker identity/order must match after removing user-block contents. Malformed, nested, unmatched, or unclosed markers fail. Whole-file replacement or deletion of existing generated files fails. |
-| Protected files | Linker scripts, startup assembly, CMSIS paths, `core_*.h`, and HAL driver paths require an exact approved path exception. |
-| Allocation | Newly added recognized calls (`malloc`, `calloc`, `realloc`, `free`, `pvPortMalloc`, `vPortFree`) fail in checked C/C++ source. Comments and literals are stripped before comparison. |
-| Layering | New recognized HAL calls or peripheral register expressions fail under path components named `app`, `application`, or `domain`. |
-| Artifacts | Known compiled suffixes `.bin`, `.hex`, `.elf`, `.o`, and `.a` are rejected by checked writes and by diff verification when present as unignored changes. |
-| Shell operations | `shell_policy.py` rejects recognized mutation/bypass patterns and unbounded read patterns. |
+## Why we keep reads small
 
-The generated-file check applies to nested modules too when they contain USER CODE markers. Allocation and layering checks compare recognized token counts; they do not perform full semantic analysis or discover every wrapper or register expression.
+An assistant has a limited amount of working context. Filling it with unrelated files makes it harder to keep track of the task. We therefore ask it to find the relevant symbols first and read only the source needed to understand them.
 
-Hooks are **not a sandbox**. Opaque scripts, specialized tools, unrecognized operations, and client integration gaps can bypass preflight coverage. The code explicitly exempts Renode emulated-memory writes from repository mutation checks. The harness does not validate physical pinouts, register names, timing guarantees, or all possible source mutations.
+Small, cohesive files can be read whole. For files longer than 200 lines, the supported file-read checks require a function extract or a window of at most 100 lines.
 
-Protected-file changes require explicit human approval under repository policy. Hook exceptions use exact absolute paths in a reviewed hook definition; the standalone verifier also accepts exact reviewer-approved paths. Do not automatically enable exceptions in CI.
+The code-search service also reports which files it indexed. The assistant must check that information before relying on a search result, and read the source when indexing is incomplete or stale. No search result is a guarantee that every relationship has been found.
 
-## Verification and failure handling
+For longer investigations, the assistant can save a short local note about what it learned. These notes record the source files and Git version they depend on. If those inputs change, the note must be checked again before reuse.
 
-At cohesive firmware milestones, run the full Ceedling suite (`bundle exec ceedling test:all` for Bundler repositories, otherwise `ceedling test:all`) and the board's required target build. The stop hook does not run the target build.
+## What we still need to check ourselves
 
-For the independent policy gate:
+The harness can identify certain file and code-pattern violations. It cannot confirm a physical pinout, measure interrupt timing, or decide whether a fault response is safe for the car. Those questions need the relevant specifications, engineering review, and tests.
 
-```sh
-python .agents/hooks/verify_changes.py --base HEAD
-```
+The same distinction applies to setup. Having hook configuration files in a repository does not mean a particular coding tool has enabled them. We check activation in that tool and test its connection to the code-search and documentation services.
 
-Use the actual PR base commit for a PR comparison. The script includes tracked differences and untracked, unignored source/system files. `--tests` additionally invokes Ceedling when source/system change plans exist. `--base EMPTY` supports comparisons against an empty tree.
+The repository currently provides adapters for Antigravity, Claude Code, Codex, and Cursor. Actual support depends on the installed client accepting and running its configuration.
 
-`stop_gate.py` resolves the Git root and runs this policy against HEAD. When plans exist, it calls `verify_tests`. Ceedling requires a root `project.yml`; missing configuration, unavailable tooling, failed tests, or concurrent verification produce failures. The runtime uses Bundler when a `Gemfile` exists and `bundle` is available; otherwise it looks for Ceedling directly.
+## Getting it running
 
-Successful test results are reused only for the same verification identity: repository HEAD, tracked and untracked unignored file contents, initialized submodule contents, and selected build-related environment values. State and Python cache files are excluded. Verification uses an exclusive lock, a 240-second test timeout, and a second identity check after tests. Logs and cached results live under `.agents/state`; inspect `ceedling.log` with a bounded read after failure. Inspect a stale `verification.lock` before retrying.
-
-A first stop failure asks the agent to fix the issue or report verification blocked. Repeated failures are surfaced without requesting an unlimited repair loop; the hook may then allow the turn to end. An ended turn is therefore not proof of successful verification. Required CI and human review remain necessary.
-
-Before a commit or PR, use `detect_changes(base_branch="dev", depth=2)` when available and `dev` exists. Otherwise review a bounded Git diff and report the fallback. Firmware PRs target `dev`. The central harness repository currently uses `main`; keep work local until its publication target is resolved.
-
-## Distribution and CI
-
-`.github/sync.yml` defines source/destination mappings and targets. `.agents/harness-manifest.json`, `doctor.py`, and `sync_plan.py check` validate the runtime payload. The sync workflow runs on relevant pushes to central `main` and manual dispatch, builds its target matrix from the plan, and opens sync PRs through a GitHub App. It attempts to convert created PRs to drafts.
-
-The configured destinations are `STM32-Template@main`, `utilities@main`, and `CAN-Gateway`, `ECU`, `Dashboard`, `Telemetry`, `LVSOC-26`, `Galvanic-Isolator`, `common`, and `BMS-Master` on `dev`. The App needs contents, pull-request, and workflow write permissions. Charger has a skill/use case in the ecosystem but is not currently in this sync target list.
-
-The payload copies agent entry points, skills including references/metadata, hook runtime, ignore rules, and client/MCP configurations into downstream repositories. It also maps `.github/callers/renode.yml` to downstream `.github/workflows/renode.yml`. Central tests, documentation, the manifest, sync planner, benchmark helper, and central CI are not part of that runtime payload. Board repositories consume copied files through sync PRs; the documentation hub separately consumes this repository as a Git submodule.
-
-`agent-harness-check.yml` runs setup/regression checks on Ubuntu and Windows with Python 3.11, plus an independent policy comparison using the workflow/event base. A separate Ubuntu job with Python 3.12 and pinned PyYAML checks Renode workflow reporting contracts. These jobs execute centrally; downstream required checks must be configured in those repositories.
-
-The distributed Renode caller invokes the central reusable `renode-test.yml@main`. Repository variables select runner, paths, commands, requirements, and parallelism; `RENODE_ENABLED=false` opts out. Without board commands/manifest, only infrastructure smoke coverage is expected. The caller excludes fork PRs. Renode regression and physical SWD validation remain distinct workflows.
-
-## Maintaining the harness
-
-After runtime or distribution changes, run in the central `.github` repository:
+Start in the repository root:
 
 ```sh
 python .agents/hooks/doctor.py
-python -m unittest discover -s .agents/tests -q
-python .agents/hooks/sync_plan.py check
-python .agents/hooks/verify_changes.py --base HEAD
 ```
 
-`doctor.py --self-test` combines the setup check with the central regression suite. Downstream checkouts should use the doctor without `--self-test`, because those tests are central-only. Report commands actually run and distinguish static setup checks from live client activation and board verification.
+The doctor checks the configuration files and expected runtime files, then reports which tools are on the computer’s search path. It does not install dependencies or confirm that hooks are active.
 
-When documentation changes, commit the updated page in `.github`, publish that commit through the agreed branch, then update `repos/agent-harness` in the documentation repo and run `npm run docs:build`. The hub retains its existing public route through a VitePress rewrite. Deployment keeps this submodule at the recorded commit; the other product submodules retain their release-tag policy.
+Python 3.11 or later and Git are needed for the harness checks. The configured search services also need Node.js/npm. Firmware tests and builds need the board repository’s own dependencies.
 
-Historical performance percentages and quality scores from the previous page are omitted: they are not reproducible evidence for the current harness. `benchmark_context.py` measures instruction entry-point bytes against a Git base; it does not measure paid/model tokens or firmware correctness.
+After running the doctor, check hook activation and service connectivity in the coding tool. The [technical reference](./harness-reference.md#setup-and-activation) lists each client’s configuration paths and the commands used for verification.
+
+## Keeping repositories in step
+
+We maintain the shared rules, skills, and checking programs in the central `.github` repository. A synchronization workflow proposes updates to the configured product repositories through pull requests. Someone must review and merge those changes before a board repository receives them.
+
+We also test the harness itself on Windows and Linux. These tests check the checking programs and their client message formats; they do not replace board tests.
+
+The [CI/CD overview](/architecture/github) explains how this distribution fits alongside firmware builds, tests, and releases. The [harness technical reference](./harness-reference.md) keeps the detailed file checks, exceptions, cache behaviour, failure handling, and local verification commands.
+
+<style scoped>
+.harness-intro { margin: 24px 0; padding: 26px; border: 1px solid var(--vp-c-divider); border-top: 4px solid #d32f2f; border-radius: 14px; background: var(--vp-c-bg-soft); }
+.harness-label { margin: 0 0 14px; color: var(--vp-c-brand-1); font-size: 12px; font-weight: 800; letter-spacing: .12em; }
+.harness-lead { margin: 0 0 16px; font-size: clamp(24px, 4vw, 31px); font-weight: 700; line-height: 1.25; letter-spacing: -.025em; }
+@media (max-width: 600px) { .harness-intro { padding: 20px; } }
+</style>
