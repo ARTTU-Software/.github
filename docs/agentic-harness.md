@@ -101,7 +101,7 @@ The doctor checks the configuration files and expected runtime files, then repor
 
 Python 3.11 or later and Git are needed for the harness checks. The configured search services also need Node.js/npm. Firmware tests and builds need the board repository’s own dependencies.
 
-After running the doctor, check hook activation and service connectivity in the coding tool. The [technical reference](./harness-reference.md#setup-and-activation) lists each client’s configuration paths and the commands used for verification.
+After running the doctor, check hook activation and service connectivity in the coding tool. The [technical reference](/architecture/agentic-harness-reference#setup-and-activation) lists each client’s configuration paths and the commands used for verification.
 
 ## Keeping repositories in step
 
@@ -109,7 +109,7 @@ We maintain the shared rules, skills, and checking programs in the central `.git
 
 We also test the harness itself on Windows and Linux. These tests check the checking programs and their client message formats; they do not replace board tests.
 
-The [CI/CD overview](/architecture/github) explains how this distribution fits alongside firmware builds, tests, and releases. The [harness technical reference](./harness-reference.md) keeps the detailed file checks, exceptions, cache behaviour, failure handling, and local verification commands.
+The [CI/CD overview](/architecture/github) explains how this distribution fits alongside firmware builds, tests, and releases. The [harness technical reference](/architecture/agentic-harness-reference) keeps the detailed file checks, exceptions, cache behaviour, failure handling, and local verification commands.
 
 <style scoped>
 .harness-intro { margin: 24px 0; padding: 26px; border: 1px solid var(--vp-c-divider); border-top: 4px solid #d32f2f; border-radius: 14px; background: var(--vp-c-bg-soft); }

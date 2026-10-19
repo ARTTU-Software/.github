@@ -7,7 +7,7 @@ outline: [2, 3]
 
 # CI/CD Workflow Reference
 
-Start with the [architecture overview](./README.md) for the visual explanation. This reference describes locally inspected workflow definitions on 19 October 2026. It does not certify successful remote runs, repository variables/secrets, installed runners, or required merge checks.
+Start with the [architecture overview](/architecture/github) for the visual explanation. This reference describes locally inspected workflow definitions on 19 October 2026. It does not certify successful remote runs, repository variables/secrets, installed runners, or required merge checks.
 
 ## Workflow contracts
 
@@ -137,7 +137,7 @@ This matrix records **workflow files in the inspected local repository revisions
 | utilities · `fe92638` | — | No build artifact requested | — | `main` |
 | Backend · `991f9c0` | — | No build artifact requested | — | — |
 
-All twelve inspected repositories also contain labeler callers that fetch central configuration. Backend separately deploys over SSH on `main` pushes. The documentation repository has a labeler plus its own three-trigger deployment (push to `main`, `docs-release` dispatch, manual). Its deployment operations remain documented there. The older Partners-Database-App coverage entry is retained in the [historical reference](./github-history.md); its current workflow state was not reverified in this review.
+All twelve inspected repositories also contain labeler callers that fetch central configuration. Backend separately deploys over SSH on `main` pushes. The documentation repository has a labeler plus its own three-trigger deployment (push to `main`, `docs-release` dispatch, manual). Its deployment operations remain documented there. The older Partners-Database-App coverage entry is retained in the [historical reference](/architecture/github-history); its current workflow state was not reverified in this review.
 
 Telemetry’s current Docker simulation job uses a self-hosted Linux/x64 runner, builds its image and Debug firmware, executes `renode/run_tests.sh`, converts Robot output to `junit.xml`, and retains `renode-report` for 14 days. It is separate from the shared runner/publisher implementation and skips draft PRs.
 
@@ -173,4 +173,4 @@ Source: [labeler.yml configuration](https://github.com/ARTTU-Software/.github/bl
 
 ## Updating these pages
 
-Edit `.github/docs/ci/` alongside workflow changes. Keep the old [historical reference](./github-history.md) clearly dated. Publish the central commit before publishing a documentation hub commit that references it, then advance `repos/agent-harness`, build the hub, and verify `/architecture/github` and `/architecture/github-reference`. Source documentation and workflow definitions share ownership; deployment-specific procedures remain in the deploying repository.
+Edit `.github/docs/ci/` alongside workflow changes. Keep the old [historical reference](/architecture/github-history) clearly dated. Publish the central commit before publishing a documentation hub commit that references it, then advance `repos/agent-harness`, build the hub, and verify `/architecture/github` and `/architecture/github-reference`. Source documentation and workflow definitions share ownership; deployment-specific procedures remain in the deploying repository.

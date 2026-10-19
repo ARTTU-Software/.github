@@ -24,7 +24,7 @@ The diagram shows the usual firmware checks. They answer different questions, so
 
 ![A proposed change runs unit tests and a firmware build. Code analysis uses the build settings. Repositories with simulation also run Renode tests. A reviewer checks the results. A version tag starts the separate release process.](./img/review-pipeline.svg)
 
-<div class="ci-jump"><a href="#follow-a-software-change">Follow a change ↓</a><a href="#publishing-a-release">See the release process ↓</a><a href="./reference.md">Find configuration details →</a></div>
+<div class="ci-jump"><a href="#follow-a-software-change">Follow a change ↓</a><a href="#publishing-a-release">See the release process ↓</a><a href="/architecture/github-reference.html">Find configuration details →</a></div>
 
 ## What each check tells us
 
@@ -77,7 +77,7 @@ The firmware build uses ARM GCC, CMake, and Ninja. These tools compile and link 
 | What the code checker found | The Clang-Tidy summary and review comments |
 | What happened during a simulation | The Renode result and its saved reports |
 
-The exact commands, file paths, and workflow inputs are in the [workflow reference](./reference.md). Repository settings decide which checks must pass before a change can be merged.
+The exact commands, file paths, and workflow inputs are in the [workflow reference](/architecture/github-reference). Repository settings decide which checks must pass before a change can be merged.
 
 ## Running firmware in Renode
 
@@ -100,9 +100,9 @@ The published status also reports when execution failed or no test report was pr
 
 The central tooling update includes a Renode caller, but that does not mean every target repository has adopted it or has board tests ready to run. The default build command only checks the infrastructure. Useful board testing requires the right firmware build, machine model, and assertions.
 
-BMS-Master and STM32-Template have shared Renode callers in the revisions reviewed for this page. Telemetry has its own Docker-based simulation workflow. The [repository snapshot](./reference.md#repository-adoption-snapshot) records these differences and the inspected revisions.
+BMS-Master and STM32-Template have shared Renode callers in the revisions reviewed for this page. Telemetry has its own Docker-based simulation workflow. The [repository snapshot](/architecture/github-reference#repository-adoption-snapshot) records these differences and the inspected revisions.
 
-The shared caller can be run manually or for a pull request from the same repository. It excludes fork pull requests. Repository variables select the runner, commands, paths, and number of test workers; `RENODE_ENABLED=false` turns it off. These settings are listed in the [Renode reference](./reference.md#renode-execution-and-reporting).
+The shared caller can be run manually or for a pull request from the same repository. It excludes fork pull requests. Repository variables select the runner, commands, paths, and number of test workers; `RENODE_ENABLED=false` turns it off. These settings are listed in the [Renode reference](/architecture/github-reference#renode-execution-and-reporting).
 
 ## Publishing a release
 
@@ -159,9 +159,9 @@ The inspected product repositories also use shared label rules. Labels identify 
 
 ## Configuration and earlier documentation
 
-The [workflow reference](./reference.md) contains the full input tables, permissions, report locations, repository snapshot, and troubleshooting notes. It also lists all eight central workflow files, including the six that other workflows can call.
+The [workflow reference](/architecture/github-reference) contains the full input tables, permissions, report locations, repository snapshot, and troubleshooting notes. It also lists all eight central workflow files, including the six that other workflows can call.
 
-The [historical page](./github-history.md) preserves the complete previous documentation and diagrams. It is marked historical because some counts and repository details have changed.
+The [historical page](/architecture/github-history) preserves the complete previous documentation and diagrams. It is marked historical because some counts and repository details have changed.
 
 We maintain the current pages in `.github/docs/ci/`, alongside the shared workflows. The documentation hub reads them through its submodule and keeps the existing public URL.
 

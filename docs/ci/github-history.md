@@ -3,7 +3,7 @@ title: GitHub CI/CD — Historical Reference
 description: Overview of the organization-wide reusable GitHub Actions workflows, per-repo CI/CD pipelines, automated cross-repo sync, and the release chain for the ARTTU Formula Student project.
 ---
 
-> **Historical reference, preserved on 19 October 2026.** The original page is retained below in full, including its diagrams and repository matrix. Its counts, adoption claims, inputs, and implementation details describe an older state. Use the [current CI/CD architecture](./README.md) and [workflow reference](./reference.md) for current behavior. Repository deployment details remain owned by their respective repositories.
+> **Historical reference, preserved on 19 October 2026.** The original page is retained below in full, including its diagrams and repository matrix. Its counts, adoption claims, inputs, and implementation details describe an older state. Use the [current CI/CD architecture](/architecture/github) and [workflow reference](/architecture/github-reference) for current behavior. Repository deployment details remain owned by their respective repositories.
 
 # GitHub CI/CD Architecture
 

@@ -6,7 +6,7 @@ editLink: false
 
 # Agent Harness Technical Reference
 
-This page contains setup commands, supported checks, configuration files, and implementation limits. Start with the [harness overview](./agentic-harness.md) for an explanation of how we use it. The implementation was reviewed on 19 October 2026.
+This page contains setup commands, supported checks, configuration files, and implementation limits. Start with the [harness overview](/architecture/agentic-harness) for an explanation of how we use it. The implementation was reviewed on 19 October 2026.
 
 The source is `ARTTU-Software/.github/docs/harness-reference.md`. The documentation hub consumes this repository through its `repos/agent-harness` submodule. Edit the source in `.github`, then update the documentation repository's submodule commit.
 
