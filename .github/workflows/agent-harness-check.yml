@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   renode-harness:
-    name: Renode workflow contracts
+    name: Workflow reporting contracts
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -28,6 +28,7 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install PyYAML==6.0.3
       - run: python -m unittest discover -s .agents/tests -p test_renode_reporting.py -q
+      - run: python -m unittest discover -s .agents/tests -p test_ceedling_reporting.py -q
   harness:
     name: Harness (${{ matrix.os }})
     strategy:
