@@ -13,18 +13,18 @@ For example, changing a sensor calculation starts the unit tests and firmware bu
 
 ```mermaid
 flowchart TB
-    PR["Pull request opened, updated or marked ready"] --> DRAFT{"Still a draft?"}
-    DRAFT -->|Yes| WAIT["Skip tests and build until ready for review"]
-    DRAFT -->|No| TEST["Ceedling: compare calculations with expected answers"]
-    DRAFT -->|No| BUILD["ARM GCC: compile firmware for the board"]
-    BUILD -->|Compiler settings artifact| LINT["Clang-Tidy: inspect changed code"]
-    TEST -->|Test results and coverage| REVIEW["Reviewer reads code and check results"]
+    PR["Pull request opened,<br/>updated or marked ready"] --> DRAFT{"Still a draft?"}
+    DRAFT -->|Yes| WAIT["Skip tests and build<br/>until ready for review"]
+    DRAFT -->|No| TEST["Ceedling: compare<br/>calculations with<br/>expected answers"]
+    DRAFT -->|No| BUILD["ARM GCC: compile<br/>firmware for the board"]
+    BUILD -->|Compiler settings artifact| LINT["Clang-Tidy: inspect<br/>changed code"]
+    TEST -->|Test results and coverage| REVIEW["Reviewer reads code and<br/>check results"]
     BUILD -->|Firmware files| REVIEW
     LINT -->|Findings| REVIEW
     REVIEW --> DECIDE{"Change ready to merge?"}
-    DECIDE -->|Needs work| EDIT["Developer updates the pull request"]
+    DECIDE -->|Needs work| EDIT["Developer updates the<br/>pull request"]
     EDIT --> PR
-    DECIDE -->|Approved and required checks pass| MERGE["Merge according to repository rules"]
+    DECIDE -->|Approved and required checks pass| MERGE["Merge according to<br/>repository rules"]
     classDef event fill:#253e64,stroke:#82b4ff,color:#f3f7ff
     classDef work fill:#203f3b,stroke:#66c5ae,color:#f0fff9
     classDef check fill:#514122,stroke:#e8bf63,color:#fff8e8

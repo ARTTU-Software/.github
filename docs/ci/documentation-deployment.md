@@ -9,15 +9,15 @@ The documentation repository gathers project pages and builds the VitePress webs
 
 ```mermaid
 flowchart TB
-    PUSH["Documentation push to main"] --> SSH["GitHub runner connects to documentation server over SSH"]
-    RELEASE["Product sends docs-release event"] --> SSH
-    MANUAL["Manual deployment request"] --> SSH
-    SSH --> REFRESH["Server refreshes documentation main; runs deploy.sh"]
-    REFRESH --> REVISIONS["Select product release tags; retain recorded central .github commit"]
-    REVISIONS --> BUILD["Docker Compose builds site image"]
+    PUSH["Documentation push to<br/>main"] --> SSH["GitHub runner connects<br/>to documentation server<br/>over SSH"]
+    RELEASE["Product sends<br/>docs-release event"] --> SSH
+    MANUAL["Manual deployment<br/>request"] --> SSH
+    SSH --> REFRESH["Server refreshes<br/>documentation main; runs<br/>deploy.sh"]
+    REFRESH --> REVISIONS["Select product release<br/>tags; retain recorded<br/>central .github commit"]
+    REVISIONS --> BUILD["Docker Compose builds<br/>site image"]
     BUILD --> OK{"Build succeeded?"}
     OK -->|Yes| SERVE["Start updated container"]
-    OK -->|No| FAIL["Job fails; previous container continues serving"]
+    OK -->|No| FAIL["Job fails; previous<br/>container continues<br/>serving"]
     classDef event fill:#253e64,stroke:#82b4ff,color:#f3f7ff
     classDef work fill:#203f3b,stroke:#66c5ae,color:#f0fff9
     classDef check fill:#514122,stroke:#e8bf63,color:#fff8e8

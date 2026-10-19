@@ -12,23 +12,23 @@ Execution and publication use separate jobs. The workshop runner runs the scenar
 
 ```mermaid
 flowchart TB
-    CALL["Board caller requests simulation"] --> ENABLE{"Enabled and PR ready for review?"}
-    ENABLE -->|No| SKIP["Skip execution and publication"]
-    ENABLE -->|Yes| RUNNER["Wait for matching Linux Renode runner"]
-    subgraph EXEC["Execution job: board tools and scenarios"]
-      RUNNER --> ENV["Create isolated Python environment; locate or install Renode"]
-      ENV --> SETUP["Install dependencies; run board setup"]
-      SETUP --> BUILD["Build board test firmware"]
-      BUILD --> TEST["Robot drives Renode and checks expected behaviour"]
-      TEST --> UPLOAD["Always attempt to save reports and logs; retain 14 days"]
+    CALL["Board caller requests<br/>simulation"] --> ENABLE{"Enabled and PR ready for<br/>review?"}
+    ENABLE -->|No| SKIP["Skip execution and<br/>publication"]
+    ENABLE -->|Yes| RUNNER["Wait for matching Linux<br/>Renode runner"]
+    subgraph EXEC["Execution job: board<br/>tools and scenarios"]
+      RUNNER --> ENV["Create isolated Python<br/>environment; locate or<br/>install Renode"]
+      ENV --> SETUP["Install dependencies;<br/>run board setup"]
+      SETUP --> BUILD["Build board test<br/>firmware"]
+      BUILD --> TEST["Robot drives Renode and<br/>checks expected<br/>behaviour"]
+      TEST --> UPLOAD["Always attempt to save<br/>reports and logs; retain<br/>14 days"]
     end
     ENV -.->|Setup fails| UPLOAD
     SETUP -.->|Command fails| UPLOAD
     BUILD -.->|Compilation fails| UPLOAD
-    UPLOAD --> PUB["GitHub-hosted job downloads results"]
-    PUB --> REPORT{"xunit.xml exists and execution succeeded?"}
-    REPORT -->|Yes| PASS["Execution check succeeds; publish test results"]
-    REPORT -->|No| FAIL["Execution check fails; inspect setup, build and test logs"]
+    UPLOAD --> PUB["GitHub-hosted job<br/>downloads results"]
+    PUB --> REPORT{"xunit.xml exists and<br/>execution succeeded?"}
+    REPORT -->|Yes| PASS["Execution check<br/>succeeds; publish test<br/>results"]
+    REPORT -->|No| FAIL["Execution check fails;<br/>inspect setup, build and<br/>test logs"]
     classDef event fill:#253e64,stroke:#82b4ff,color:#f3f7ff
     classDef work fill:#203f3b,stroke:#66c5ae,color:#f0fff9
     classDef check fill:#514122,stroke:#e8bf63,color:#fff8e8
@@ -51,13 +51,13 @@ The publication job can explain a failed execution even when no test report was 
 
 ```mermaid
 flowchart TB
-    RESULTS["Execution result and saved artifact"] --> XML{"xunit.xml available?"}
-    XML -->|Yes| UNIT["Publish individual test results and summary"]
-    XML -->|No| MISSING["Summary identifies missing report"]
-    RESULTS --> STATUS["Execution status and artifact link"]
-    STATUS --> WRITES{"Same-repository PR or non-PR event?"}
-    WRITES -->|Yes| CHECK["Create execution check; update comment for a PR"]
-    WRITES -->|Fork PR| READ["Keep summary; skip check and comment writes"]
+    RESULTS["Execution result and<br/>saved artifact"] --> XML{"xunit.xml available?"}
+    XML -->|Yes| UNIT["Publish individual test<br/>results and summary"]
+    XML -->|No| MISSING["Summary identifies<br/>missing report"]
+    RESULTS --> STATUS["Execution status and<br/>artifact link"]
+    STATUS --> WRITES{"Same-repository PR or<br/>non-PR event?"}
+    WRITES -->|Yes| CHECK["Create execution check;<br/>update comment for a PR"]
+    WRITES -->|Fork PR| READ["Keep summary; skip check<br/>and comment writes"]
     classDef event fill:#253e64,stroke:#82b4ff,color:#f3f7ff
     classDef work fill:#203f3b,stroke:#66c5ae,color:#f0fff9
     classDef check fill:#514122,stroke:#e8bf63,color:#fff8e8

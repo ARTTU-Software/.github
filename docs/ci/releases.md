@@ -9,13 +9,13 @@ A version tag identifies the source used for a release. The standard firmware re
 
 ```mermaid
 flowchart TB
-    TAG["Push version tag matching v* in a firmware repository"] --> BUILD["Build firmware from tagged source"]
+    TAG["Push version tag<br/>matching v* in a<br/>firmware repository"] --> BUILD["Build firmware from<br/>tagged source"]
     BUILD --> OK{"Build succeeded?"}
-    OK -->|No| STOP["Release job cannot start; fix the build"]
-    OK -->|Yes| DOWNLOAD["Release job attempts to download stm32-artifacts"]
-    DOWNLOAD --> PUBLISH["Create GitHub release with generated notes and available firmware files"]
-    PUBLISH --> NOTIFY["Send docs-release event with repository name and tag"]
-    NOTIFY --> DOCS["Documentation repository starts its own deployment"]
+    OK -->|No| STOP["Release job cannot<br/>start; fix the build"]
+    OK -->|Yes| DOWNLOAD["Release job attempts to<br/>download stm32-artifacts"]
+    DOWNLOAD --> PUBLISH["Create GitHub release<br/>with generated notes and<br/>available firmware files"]
+    PUBLISH --> NOTIFY["Send docs-release event<br/>with repository name and<br/>tag"]
+    NOTIFY --> DOCS["Documentation repository<br/>starts its own<br/>deployment"]
     classDef event fill:#253e64,stroke:#82b4ff,color:#f3f7ff
     classDef work fill:#203f3b,stroke:#66c5ae,color:#f0fff9
     classDef check fill:#514122,stroke:#e8bf63,color:#fff8e8

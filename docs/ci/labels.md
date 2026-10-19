@@ -9,12 +9,12 @@ Labels help reviewers recognise which parts of a project changed. The labeler co
 
 ```mermaid
 flowchart TB
-    PR["Pull-request target event"] --> CONFIG["Load label rules; product callers fetch central configuration"]
-    CONFIG --> PATHS["Compare changed file paths with each rule"]
-    PATHS --> MATCH{"Rule matches changed paths?"}
+    PR["Pull-request target<br/>event"] --> CONFIG["Load label rules;<br/>product callers fetch<br/>central configuration"]
+    CONFIG --> PATHS["Compare changed file<br/>paths with each rule"]
+    PATHS --> MATCH{"Rule matches changed<br/>paths?"}
     MATCH -->|Yes| ADD["Apply matching label"]
     MATCH -->|No longer matches, with sync-labels| REMOVE["Remove the managed label"]
-    ADD --> REVIEW["Reviewer sees categories such as C/C++, Driver or documentation"]
+    ADD --> REVIEW["Reviewer sees categories<br/>such as C/C++, Driver or<br/>documentation"]
     REMOVE --> REVIEW
     classDef event fill:#253e64,stroke:#82b4ff,color:#f3f7ff
     classDef work fill:#203f3b,stroke:#66c5ae,color:#f0fff9

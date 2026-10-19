@@ -9,14 +9,14 @@ Clang-Tidy reads source code and looks for patterns associated with bugs or unne
 
 ```mermaid
 flowchart TB
-    BUILD["Firmware build succeeds"] --> ARTIFACT["stm32-artifacts contains compile_commands.json"]
-    ARTIFACT --> DOWNLOAD["Download artifact into build/"]
-    DOWNLOAD --> TARGET["Install ARM toolchain; locate system headers"]
-    TARGET --> ANALYSE["Clang-Tidy checks changed code with selected rules"]
-    ANALYSE --> FINDINGS{"Checks reported failures?"}
-    FINDINGS -->|Yes| FAIL["Fail job; show findings for review"]
+    BUILD["Firmware build succeeds"] --> ARTIFACT["stm32-artifacts contains<br/>compile_commands.json"]
+    ARTIFACT --> DOWNLOAD["Download artifact into<br/>build/"]
+    DOWNLOAD --> TARGET["Install ARM toolchain;<br/>locate system headers"]
+    TARGET --> ANALYSE["Clang-Tidy checks<br/>changed code with<br/>selected rules"]
+    ANALYSE --> FINDINGS{"Checks reported<br/>failures?"}
+    FINDINGS -->|Yes| FAIL["Fail job; show findings<br/>for review"]
     FINDINGS -->|No| PASS["Analysis job passes"]
-    ANALYSE --> REVIEW["Publish job summary and PR review feedback"]
+    ANALYSE --> REVIEW["Publish job summary and<br/>PR review feedback"]
     classDef event fill:#253e64,stroke:#82b4ff,color:#f3f7ff
     classDef work fill:#203f3b,stroke:#66c5ae,color:#f0fff9
     classDef check fill:#514122,stroke:#e8bf63,color:#fff8e8

@@ -9,12 +9,12 @@ The Backend repository has its own deployment procedure. A push to its main bran
 
 ```mermaid
 flowchart TB
-    PUSH["Push reaches Backend main"] --> RUNNER["GitHub starts Ubuntu runner"]
-    RUNNER --> SSH["Connect to production server with configured SSH credentials"]
-    SSH --> SCRIPT["Change to /srv/docker/compose; run bash redeploy.sh"]
-    SCRIPT --> RESULT{"Remote command succeeded?"}
-    RESULT -->|Yes| PASS["Deployment job completes successfully"]
-    RESULT -->|No| FAIL["Job fails; inspect SSH and server script output"]
+    PUSH["Push reaches Backend<br/>main"] --> RUNNER["GitHub starts Ubuntu<br/>runner"]
+    RUNNER --> SSH["Connect to production<br/>server with configured<br/>SSH credentials"]
+    SSH --> SCRIPT["Change to<br/>/srv/docker/compose; run<br/>bash redeploy.sh"]
+    SCRIPT --> RESULT{"Remote command<br/>succeeded?"}
+    RESULT -->|Yes| PASS["Deployment job completes<br/>successfully"]
+    RESULT -->|No| FAIL["Job fails; inspect SSH<br/>and server script output"]
     classDef event fill:#253e64,stroke:#82b4ff,color:#f3f7ff
     classDef work fill:#203f3b,stroke:#66c5ae,color:#f0fff9
     classDef check fill:#514122,stroke:#e8bf63,color:#fff8e8

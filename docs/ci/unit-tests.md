@@ -9,16 +9,16 @@ Unit tests give a small piece of code known inputs and compare the answer with a
 
 ```mermaid
 flowchart TB
-    CALL["Firmware caller requests unit tests"] --> ENV["Check out source and submodules; install Ruby and dependencies"]
+    CALL["Firmware caller requests<br/>unit tests"] --> ENV["Check out source and<br/>submodules; install Ruby<br/>and dependencies"]
     ENV --> MODE{"Coverage enabled?"}
     MODE -->|Yes, default| GCOV["Run Ceedling gcov:all"]
     MODE -->|No| TEST["Run Ceedling test:all"]
-    GCOV --> COLLECT["Always collect reports for the selected mode"]
+    GCOV --> COLLECT["Always collect reports<br/>for the selected mode"]
     TEST --> COLLECT
     COLLECT --> FOUND{"Required reports exist?"}
-    FOUND -->|No| FAIL["Fail collection; inspect test and plugin errors"]
-    FOUND -->|Yes| REPORT["Publish test checks; save ceedling-reports artifact"]
-    REPORT --> COV["Coverage mode: add job summary and attempt PR comment"]
+    FOUND -->|No| FAIL["Fail collection; inspect<br/>test and plugin errors"]
+    FOUND -->|Yes| REPORT["Publish test checks;<br/>save ceedling-reports<br/>artifact"]
+    REPORT --> COV["Coverage mode: add job<br/>summary and attempt PR<br/>comment"]
     classDef event fill:#253e64,stroke:#82b4ff,color:#f3f7ff
     classDef work fill:#203f3b,stroke:#66c5ae,color:#f0fff9
     classDef check fill:#514122,stroke:#e8bf63,color:#fff8e8

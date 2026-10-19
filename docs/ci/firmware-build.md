@@ -9,15 +9,15 @@ The build turns source code into a program for the board's microcontroller. It a
 
 ```mermaid
 flowchart TB
-    CALL["PR or release caller requests a build"] --> SOURCE["Check out source and recursive submodules"]
-    SOURCE --> TOOLS["Install ARM GCC and Ninja; restore compiler cache"]
-    TOOLS --> CONFIG["CMake configures a Release build in build/"]
-    CONFIG --> COMPILE["Ninja compiles and links firmware"]
+    CALL["PR or release caller<br/>requests a build"] --> SOURCE["Check out source and<br/>recursive submodules"]
+    SOURCE --> TOOLS["Install ARM GCC and<br/>Ninja; restore compiler<br/>cache"]
+    TOOLS --> CONFIG["CMake configures a<br/>Release build in build/"]
+    CONFIG --> COMPILE["Ninja compiles and links<br/>firmware"]
     COMPILE --> RESULT{"Build succeeded?"}
-    RESULT -->|No| ERROR["Fail job; read compiler or linker diagnostics"]
+    RESULT -->|No| ERROR["Fail job; read compiler<br/>or linker diagnostics"]
     RESULT -->|Yes| SAVE["Upload stm32-artifacts"]
-    SAVE --> FILES["ELF, binary and map files for inspection or release"]
-    SAVE --> DB["compile_commands.json for Clang-Tidy"]
+    SAVE --> FILES["ELF, binary and map<br/>files for inspection or<br/>release"]
+    SAVE --> DB["compile_commands.json<br/>for Clang-Tidy"]
     classDef event fill:#253e64,stroke:#82b4ff,color:#f3f7ff
     classDef work fill:#203f3b,stroke:#66c5ae,color:#f0fff9
     classDef check fill:#514122,stroke:#e8bf63,color:#fff8e8

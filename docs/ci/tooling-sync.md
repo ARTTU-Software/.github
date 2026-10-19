@@ -9,17 +9,17 @@ Some tools need files inside each project: assistant instructions, skills and lo
 
 ```mermaid
 flowchart TB
-    CHANGE["Relevant tooling change reaches central main, or manual run"] --> PLAN["Validate sync plan, runtime setup and skill distribution"]
+    CHANGE["Relevant tooling change<br/>reaches central main, or<br/>manual run"] --> PLAN["Validate sync plan,<br/>runtime setup and skill<br/>distribution"]
     PLAN --> VALID{"Validation passed?"}
-    VALID -->|No| STOP["Stop before proposing downstream updates"]
-    VALID -->|Yes| MATRIX["Read target list; start independent job per repository"]
-    MATRIX --> TOKEN["Create GitHub App token limited to that target"]
-    TOKEN --> RENDER["Render target file mapping"]
+    VALID -->|No| STOP["Stop before proposing<br/>downstream updates"]
+    VALID -->|Yes| MATRIX["Read target list; start<br/>independent job per<br/>repository"]
+    MATRIX --> TOKEN["Create GitHub App token<br/>limited to that target"]
+    TOKEN --> RENDER["Render target file<br/>mapping"]
     RENDER --> DIFFERENT{"Mapped files differ?"}
     DIFFERENT -->|No| NONE["No update needed"]
-    DIFFERENT -->|Yes| PR["Create or update PR with one commit and labels"]
-    PR --> DRAFT["Attempt draft conversion; check result"]
-    DRAFT --> REVIEW["Target maintainers review and merge"]
+    DIFFERENT -->|Yes| PR["Create or update PR with<br/>one commit and labels"]
+    PR --> DRAFT["Attempt draft<br/>conversion; check result"]
+    DRAFT --> REVIEW["Target maintainers<br/>review and merge"]
     classDef event fill:#253e64,stroke:#82b4ff,color:#f3f7ff
     classDef work fill:#203f3b,stroke:#66c5ae,color:#f0fff9
     classDef check fill:#514122,stroke:#e8bf63,color:#fff8e8

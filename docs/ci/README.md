@@ -17,13 +17,13 @@ The diagram shows the usual firmware checks. They answer different questions, so
 flowchart TB
     CHANGE["Proposed software change"] --> UNIT["Unit tests"]
     CHANGE --> BUILD["Firmware build"]
-    CHANGE -.-> SIM["Renode tests where adopted"]
+    CHANGE -.-> SIM["Renode tests where<br/>adopted"]
     BUILD --> ANALYSIS["Code analysis"]
     UNIT --> REVIEW["Review the results"]
     ANALYSIS --> REVIEW
     SIM --> REVIEW
-    REVIEW --> MERGE["Merge the reviewed change"]
-    TAG["Separate event: version tag"] --> RELEASE["Publish release and notify documentation"]
+    REVIEW --> MERGE["Merge the reviewed<br/>change"]
+    TAG["Separate event: version<br/>tag"] --> RELEASE["Publish release and<br/>notify documentation"]
 
     classDef task fill:#253e64,stroke:#82b4ff,color:#f3f7ff
     classDef process fill:#203f3b,stroke:#66c5ae,color:#f0fff9
@@ -68,12 +68,12 @@ A **caller** is the small workflow in a project repository that chooses when to 
 
 ```mermaid
 flowchart TB
-    subgraph PRODUCT["Project repository: chooses when and what to check"]
-      EVENT["Pull request or version tag"] --> CALLER["Caller selects jobs, dependencies and permissions"]
+    subgraph PRODUCT["Project repository:<br/>chooses when and what to<br/>check"]
+      EVENT["Pull request or version<br/>tag"] --> CALLER["Caller selects jobs,<br/>dependencies and<br/>permissions"]
     end
-    CALLER -->|Calls reusable workflow| CENTRAL["Central .github: shared tests, build, analysis or release steps"]
-    CENTRAL -->|Runs against the project's source| RESULT["Project workflow run: logs, checks and downloadable files"]
-    RESULT --> REVIEW["Developer or reviewer investigates the result"]
+    CALLER -->|Calls reusable workflow| CENTRAL["Central .github: shared<br/>tests, build, analysis<br/>or release steps"]
+    CENTRAL -->|Runs against the project's source| RESULT["Project workflow run:<br/>logs, checks and<br/>downloadable files"]
+    RESULT --> REVIEW["Developer or reviewer<br/>investigates the result"]
     classDef event fill:#253e64,stroke:#82b4ff,color:#f3f7ff
     classDef work fill:#203f3b,stroke:#66c5ae,color:#f0fff9
     class EVENT event

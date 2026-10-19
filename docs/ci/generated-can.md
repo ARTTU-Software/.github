@@ -9,12 +9,12 @@ The common library stores a CAN message-description file, the DBC, alongside C h
 
 ```mermaid
 flowchart TB
-    CHANGE["PR changes DBC, generator or generated header; or manual run"] --> CHECKOUT["Check out common; install Python 3.11"]
+    CHANGE["PR changes DBC,<br/>generator or generated<br/>header; or manual run"] --> CHECKOUT["Check out common;<br/>install Python 3.11"]
     CHECKOUT --> GENERATE["Run dbc_to_c_builder.py"]
-    GENERATE --> DIFF["Compare generated headers with committed versions"]
+    GENERATE --> DIFF["Compare generated<br/>headers with committed<br/>versions"]
     DIFF --> SAME{"Both headers unchanged?"}
-    SAME -->|Yes| PASS["Pass: committed output matches generator"]
-    SAME -->|No| FAIL["Fail: regenerate locally and review header changes"]
+    SAME -->|Yes| PASS["Pass: committed output<br/>matches generator"]
+    SAME -->|No| FAIL["Fail: regenerate locally<br/>and review header<br/>changes"]
     classDef event fill:#253e64,stroke:#82b4ff,color:#f3f7ff
     classDef work fill:#203f3b,stroke:#66c5ae,color:#f0fff9
     classDef check fill:#514122,stroke:#e8bf63,color:#fff8e8

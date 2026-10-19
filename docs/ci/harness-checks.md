@@ -9,12 +9,12 @@ The central repository tests the assistant's local checks and the workflows that
 
 ```mermaid
 flowchart TB
-    EVENT["Central PR, push to main/dev, manual run or reusable call"] --> LINUX["Ubuntu, Python 3.11: doctor self-test and source policy"]
-    EVENT --> WINDOWS["Windows, Python 3.11: doctor self-test and source policy"]
-    EVENT --> REPORT["Ubuntu 24.04, Python 3.12 and PyYAML: reporting contracts"]
-    REPORT --> RENODE["Test Renode reporting behaviour"]
-    RENODE --> CEEDLING["Test Ceedling reporting behaviour"]
-    LINUX --> RESULTS["Review each job; investigate any failure"]
+    EVENT["Central PR, push to<br/>main/dev, manual run or<br/>reusable call"] --> LINUX["Ubuntu, Python 3.11:<br/>doctor self-test and<br/>source policy"]
+    EVENT --> WINDOWS["Windows, Python 3.11:<br/>doctor self-test and<br/>source policy"]
+    EVENT --> REPORT["Ubuntu 24.04, Python<br/>3.12 and PyYAML:<br/>reporting contracts"]
+    REPORT --> RENODE["Test Renode reporting<br/>behaviour"]
+    RENODE --> CEEDLING["Test Ceedling reporting<br/>behaviour"]
+    LINUX --> RESULTS["Review each job;<br/>investigate any failure"]
     WINDOWS --> RESULTS
     CEEDLING --> RESULTS
     classDef event fill:#253e64,stroke:#82b4ff,color:#f3f7ff
@@ -37,15 +37,15 @@ The workflow uses the first available revision in this order. An all-zero SHA is
 
 ```mermaid
 flowchart TB
-    INPUT{"Caller supplied base_revision?"} -->|Yes| USE["Use that revision"]
+    INPUT{"Caller supplied<br/>base_revision?"} -->|Yes| USE["Use that revision"]
     INPUT -->|No| PR{"PR base SHA available?"}
     PR -->|Yes| USE
-    PR -->|No| BEFORE{"Event before SHA available?"}
+    PR -->|No| BEFORE{"Event before SHA<br/>available?"}
     BEFORE -->|Yes| USE
     BEFORE -->|No| CURRENT["Use current event SHA"]
     USE --> ZERO{"All-zero SHA?"}
-    ZERO -->|Yes| EMPTY["Compare against EMPTY tree"]
-    ZERO -->|No| VERIFY["Run independent policy check against chosen base"]
+    ZERO -->|Yes| EMPTY["Compare against EMPTY<br/>tree"]
+    ZERO -->|No| VERIFY["Run independent policy<br/>check against chosen<br/>base"]
     CURRENT --> VERIFY
     EMPTY --> VERIFY
     classDef work fill:#203f3b,stroke:#66c5ae,color:#f0fff9
