@@ -8,7 +8,7 @@ editLink: false
 Clang-Tidy reads source code and looks for patterns associated with bugs or unnecessary work. It uses the firmware build's compiler settings to understand the target and included headers.
 
 ```mermaid
-%%{init: {"flowchart": {"htmlLabels": false}}}%%
+%%{init: {"htmlLabels": false}}%%
 flowchart TB
     BUILD["Firmware build succeeds"] --> ARTIFACT["stm32-artifacts contains<br/>compile_commands.json"]
     ARTIFACT --> DOWNLOAD["Download artifact into<br/>build/"]

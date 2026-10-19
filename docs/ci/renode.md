@@ -11,7 +11,7 @@ Renode runs firmware in an emulated machine. Robot tests supply events and check
 Execution and publication use separate jobs. The workshop runner runs the scenarios; a GitHub-hosted runner publishes their results.
 
 ```mermaid
-%%{init: {"flowchart": {"htmlLabels": false}}}%%
+%%{init: {"htmlLabels": false}}%%
 flowchart TB
     CALL["Board caller requests<br/>simulation"] --> ENABLE{"Enabled and PR ready for<br/>review?"}
     ENABLE -->|No| SKIP["Skip execution and<br/>publication"]
@@ -51,7 +51,7 @@ The template's default build command is `python --version`, which checks the inf
 The publication job can explain a failed execution even when no test report was produced. This keeps a setup failure visible rather than presenting it as a passing test.
 
 ```mermaid
-%%{init: {"flowchart": {"htmlLabels": false}}}%%
+%%{init: {"htmlLabels": false}}%%
 flowchart TB
     RESULTS["Execution result and<br/>saved artifact"] --> XML{"xunit.xml available?"}
     XML -->|Yes| UNIT["Publish individual test<br/>results and summary"]

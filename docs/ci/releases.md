@@ -8,7 +8,7 @@ editLink: false
 A version tag identifies the source used for a release. The standard firmware release caller builds that tagged source, publishes available firmware files, and notifies the documentation site.
 
 ```mermaid
-%%{init: {"flowchart": {"htmlLabels": false}}}%%
+%%{init: {"htmlLabels": false}}%%
 flowchart TB
     TAG["Push version tag<br/>matching v* in a<br/>firmware repository"] --> BUILD["Build firmware from<br/>tagged source"]
     BUILD --> OK{"Build succeeded?"}

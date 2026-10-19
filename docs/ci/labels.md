@@ -8,7 +8,7 @@ editLink: false
 Labels help reviewers recognise which parts of a project changed. The labeler compares changed paths with shared rules and applies matching labels. It does not compile, test or approve the code.
 
 ```mermaid
-%%{init: {"flowchart": {"htmlLabels": false}}}%%
+%%{init: {"htmlLabels": false}}%%
 flowchart TB
     PR["Pull-request target<br/>event"] --> CONFIG["Load label rules;<br/>product callers fetch<br/>central configuration"]
     CONFIG --> PATHS["Compare changed file<br/>paths with each rule"]

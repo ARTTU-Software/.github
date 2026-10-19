@@ -8,7 +8,7 @@ editLink: false
 Unit tests give a small piece of code known inputs and compare the answer with an expected value. Ceedling runs our C tests on the GitHub runner. Coverage reporting also records which source code the tests exercised.
 
 ```mermaid
-%%{init: {"flowchart": {"htmlLabels": false}}}%%
+%%{init: {"htmlLabels": false}}%%
 flowchart TB
     CALL["Firmware caller requests<br/>unit tests"] --> ENV["Check out source and<br/>submodules; install Ruby<br/>and dependencies"]
     ENV --> MODE{"Coverage enabled?"}
