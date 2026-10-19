@@ -119,9 +119,9 @@ The published status also reports when execution failed or no test report was pr
 
 STM32-Template includes a starter Renode caller. Existing board repositories adopt and maintain their own callers; the central tooling sync does not distribute them. The default build command only checks the infrastructure. Useful board testing requires the right firmware build, machine model, and assertions.
 
-BMS-Master and STM32-Template have shared Renode callers in the revisions reviewed for this page. Telemetry has its own Docker-based simulation workflow. The [repository snapshot](/architecture/github-reference#repository-adoption-snapshot) records these differences and the inspected revisions.
+BMS-Master and STM32-Template have shared Renode callers in the revisions reviewed for this page. Telemetry has its own Docker-based simulation workflow. The repository adoption dropdown below records these differences and the inspected revisions.
 
-The template caller can be run manually or for a pull request from the same repository after it is ready for review. It excludes fork and draft pull requests. The central workflow also skips draft pull requests. The template selects the workshop runner; repository variables select commands, paths, and number of test workers. `RENODE_ENABLED=false` turns it off. These settings are listed in the [Renode reference](/architecture/github-reference#renode-execution-and-reporting).
+The template caller can be run manually or for a pull request from the same repository after it is ready for review. It excludes fork and draft pull requests. The central workflow also skips draft pull requests. The template selects the workshop runner; repository variables select commands, paths, and number of test workers. `RENODE_ENABLED=false` turns it off. These settings are included in the workflow inputs dropdown below.
 
 </details>
 
