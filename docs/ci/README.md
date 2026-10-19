@@ -14,6 +14,7 @@ A **workflow** is a set of instructions for GitHub to carry out, such as buildin
 The diagram shows the usual firmware checks. They answer different questions, so we use them together.
 
 ```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}}}%%
 flowchart TB
     CHANGE["Proposed software change"] --> UNIT["Unit tests"]
     CHANGE --> BUILD["Firmware build"]
@@ -67,6 +68,7 @@ A reviewer reads the code and the check results together. A passing test covers 
 A **caller** is the small workflow in a project repository that chooses when to request a shared procedure. The central .github repository keeps the reusable implementation. For example, the same build procedure can serve a pull request and a tagged release.
 
 ```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}}}%%
 flowchart TB
     subgraph PRODUCT["Project repository:<br/>chooses when and what to<br/>check"]
       EVENT["Pull request or version<br/>tag"] --> CALLER["Caller selects jobs,<br/>dependencies and<br/>permissions"]

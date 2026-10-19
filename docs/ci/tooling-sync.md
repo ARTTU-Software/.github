@@ -8,6 +8,7 @@ editLink: false
 Some tools need files inside each project: assistant instructions, skills and local checks. Sync proposes updates through pull requests so each repository can review the change.
 
 ```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}}}%%
 flowchart TB
     CHANGE["Relevant tooling change<br/>reaches central main, or<br/>manual run"] --> PLAN["Validate sync plan,<br/>runtime setup and skill<br/>distribution"]
     PLAN --> VALID{"Validation passed?"}

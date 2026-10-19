@@ -8,6 +8,7 @@ editLink: false
 The common library stores a CAN message-description file, the DBC, alongside C headers generated from it. This check catches changes that update one without updating the other.
 
 ```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}}}%%
 flowchart TB
     CHANGE["PR changes DBC,<br/>generator or generated<br/>header; or manual run"] --> CHECKOUT["Check out common;<br/>install Python 3.11"]
     CHECKOUT --> GENERATE["Run dbc_to_c_builder.py"]

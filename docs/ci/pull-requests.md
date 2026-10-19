@@ -12,6 +12,7 @@ A pull request lets another team member review a change before it joins the shar
 For example, changing a sensor calculation starts the unit tests and firmware build independently. The diagram shows which work can start immediately and which must wait.
 
 ```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}}}%%
 flowchart TB
     PR["Pull request opened,<br/>updated or marked ready"] --> DRAFT{"Still a draft?"}
     DRAFT -->|Yes| WAIT["Skip tests and build<br/>until ready for review"]

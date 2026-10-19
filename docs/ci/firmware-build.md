@@ -8,6 +8,7 @@ editLink: false
 The build turns source code into a program for the board's microcontroller. It also records compiler settings so the analysis job can understand the same headers and options.
 
 ```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}}}%%
 flowchart TB
     CALL["PR or release caller<br/>requests a build"] --> SOURCE["Check out source and<br/>recursive submodules"]
     SOURCE --> TOOLS["Install ARM GCC and<br/>Ninja; restore compiler<br/>cache"]

@@ -8,6 +8,7 @@ editLink: false
 The central repository tests the assistant's local checks and the workflows that report test results. These checks help catch tooling failures before an update is distributed to board repositories.
 
 ```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}}}%%
 flowchart TB
     EVENT["Central PR, push to<br/>main/dev, manual run or<br/>reusable call"] --> LINUX["Ubuntu, Python 3.11:<br/>doctor self-test and<br/>source policy"]
     EVENT --> WINDOWS["Windows, Python 3.11:<br/>doctor self-test and<br/>source policy"]
@@ -36,6 +37,7 @@ Reporting-contract tests inspect and exercise the Renode and Ceedling reporting 
 The workflow uses the first available revision in this order. An all-zero SHA is converted to `EMPTY` before the policy script runs.
 
 ```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}}}%%
 flowchart TB
     INPUT{"Caller supplied<br/>base_revision?"} -->|Yes| USE["Use that revision"]
     INPUT -->|No| PR{"PR base SHA available?"}

@@ -8,6 +8,7 @@ editLink: false
 The documentation repository gathers project pages and builds the VitePress website. A product release can request a refresh; changes to the site's main branch and manual requests start the same deployment.
 
 ```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}}}%%
 flowchart TB
     PUSH["Documentation push to<br/>main"] --> SSH["GitHub runner connects<br/>to documentation server<br/>over SSH"]
     RELEASE["Product sends<br/>docs-release event"] --> SSH

@@ -8,6 +8,7 @@ editLink: false
 The Backend repository has its own deployment procedure. A push to its main branch asks the production server to run the server's redeployment script.
 
 ```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}}}%%
 flowchart TB
     PUSH["Push reaches Backend<br/>main"] --> RUNNER["GitHub starts Ubuntu<br/>runner"]
     RUNNER --> SSH["Connect to production<br/>server with configured<br/>SSH credentials"]
