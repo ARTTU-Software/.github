@@ -98,11 +98,11 @@ The published status also reports when execution failed or no test report was pr
 
 ### Where simulation is available
 
-The central tooling update includes a Renode caller, but that does not mean every target repository has adopted it or has board tests ready to run. The default build command only checks the infrastructure. Useful board testing requires the right firmware build, machine model, and assertions.
+STM32-Template includes a starter Renode caller. Existing board repositories adopt and maintain their own callers; the central tooling sync does not distribute them. The default build command only checks the infrastructure. Useful board testing requires the right firmware build, machine model, and assertions.
 
 BMS-Master and STM32-Template have shared Renode callers in the revisions reviewed for this page. Telemetry has its own Docker-based simulation workflow. The [repository snapshot](/architecture/github-reference#repository-adoption-snapshot) records these differences and the inspected revisions.
 
-The shared caller can be run manually or for a pull request from the same repository. It excludes fork pull requests. Repository variables select the runner, commands, paths, and number of test workers; `RENODE_ENABLED=false` turns it off. These settings are listed in the [Renode reference](/architecture/github-reference#renode-execution-and-reporting).
+The template caller can be run manually or for a pull request from the same repository after it is ready for review. It excludes fork and draft pull requests. The central workflow also skips draft pull requests. The template selects the workshop runner; repository variables select commands, paths, and number of test workers. `RENODE_ENABLED=false` turns it off. These settings are listed in the [Renode reference](/architecture/github-reference#renode-execution-and-reporting).
 
 ## Publishing a release
 
@@ -130,7 +130,7 @@ The [publishing guide](/getting-started/publishing-docs) explains how to update 
 
 ## Updating the tools across repositories
 
-The reusable build and test workflows are called from the central repository. Some development tools instead need files copied into each project: assistant instructions, skills, local checking programs, and the Renode caller.
+The reusable build and test workflows are called from the central repository. Some development tools instead need files copied into each project: assistant instructions, skills, and local checking programs. Renode callers stay with the template or board repository that owns them.
 
 We maintain a list of ten update targets: CAN-Gateway, ECU, Dashboard, Telemetry, LVSOC-26, Galvanic-Isolator, common, BMS-Master, STM32-Template, and utilities. The first eight target `dev`; the template and utilities target `main`.
 

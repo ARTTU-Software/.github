@@ -58,7 +58,7 @@ Enabled families are `bugprone-*`, `clang-analyzer-*`, and `performance-*`, with
 
 ### Renode execution and reporting
 
-Sources: [renode-test.yml](https://github.com/ARTTU-Software/.github/blob/main/.github/workflows/renode-test.yml) and [distributed caller](https://github.com/ARTTU-Software/.github/blob/main/.github/callers/renode.yml).
+Sources: [renode-test.yml](https://github.com/ARTTU-Software/.github/blob/main/.github/workflows/renode-test.yml) and [STM32-Template caller](https://github.com/ARTTU-Software/STM32-Template/blob/main/.github/workflows/renode.yml). The caller is maintained in the template or adopting board repository, outside the tooling sync payload. The central workflow skips execution and publication for draft pull requests.
 
 | Input | Default | Purpose |
 | --- | --- | --- |
@@ -82,14 +82,13 @@ Execution currently requires Linux and Bash. It creates an isolated Python envir
 
 The archive is validated before extraction. For installed Debian Renode, the workflow can select the underlying `Renode.dll` so Robot process/port discovery uses the native .NET process. Board callers remain responsible for setup commands, model fidelity, ELF/platform compatibility, and useful assertions.
 
-The separate `publish` job runs on Ubuntu 24.04, downloads the report artifact, and publishes `xunit.xml` when present. It adds a summary, an execution-status check, and a marked PR comment that is updated on subsequent runs. The execution check succeeds only when a report exists and the execution job succeeded. Upload/download/report absence remains visible in the summary. Fork contexts do not receive check/comment writes, and the distributed caller excludes fork PRs entirely.
+The separate `publish` job runs on Ubuntu 24.04, downloads the report artifact, and publishes `xunit.xml` when present. It adds a summary, an execution-status check, and a marked PR comment that is updated on subsequent runs. The execution check succeeds only when a report exists and the execution job succeeded. Upload/download/report absence remains visible in the summary. Fork contexts do not receive check/comment writes, and the template caller excludes fork PRs entirely.
 
-The **distributed caller** maps these repository variables:
+The **STM32-Template caller** maps these repository variables:
 
 | Variable | Caller behavior |
 | --- | --- |
 | `RENODE_ENABLED` | Only the string `false` opts out; unset is enabled |
-| `RENODE_RUNNER` | Defaults to JSON `["renode"]` |
 | `RENODE_PATH`, `RENODE_TESTS` | Installed tool and runner-script paths |
 | `RENODE_SETUP_COMMAND` | Optional setup |
 | `RENODE_BUILD_COMMAND` | Defaults to `python --version` for infrastructure smoke |
@@ -97,7 +96,7 @@ The **distributed caller** maps these repository variables:
 | `RENODE_REQUIREMENTS` | Defaults to harness requirements |
 | `RENODE_JOBS` | Parsed as JSON number, defaults to 1 |
 
-That caller sets `arm-gdb: /usr/bin/gdb-multiarch`. Its triggers are PR opened/synchronize/reopened/ready-for-review and manual dispatch; concurrency cancels earlier runs of the same workflow/ref. It has no draft-PR exclusion. A caller file or passing infrastructure smoke is insufficient evidence of board regression coverage.
+That caller selects the `salita` runner group with labels `self-hosted`, `Linux`, `X86`, and `renode`, and sets `arm-gdb: /usr/bin/gdb-multiarch`. Its triggers are PR opened/synchronize/reopened/ready-for-review and manual dispatch; concurrency cancels earlier runs of the same workflow/ref. Draft PRs are skipped; marking a PR ready for review starts the workflow. A caller file or passing infrastructure smoke is insufficient evidence of board regression coverage.
 
 ### Release and documentation notification
 
@@ -116,7 +115,7 @@ Sources: [agent-harness-check.yml](https://github.com/ARTTU-Software/.github/blo
 
 `agent-harness-check.yml` accepts optional string `base_revision`, default empty. Its policy base falls back to the PR base SHA, event-before SHA, or current SHA; an all-zero base becomes `EMPTY`. Central harness tests run on Ubuntu/Windows with Python 3.11. Renode reporting-contract tests run separately with Python 3.12 and PyYAML 6.0.3.
 
-The sync plan validates ten destinations, checks the doctor/regression suite and skill distribution, then renders a per-target config using Python. A matrix with `fail-fast: false` isolates target failures. `SYNC_APP_ID` and `SYNC_APP_PRIVATE_KEY` create per-target GitHub App installation tokens requesting contents, PR, and workflow writes. The file-sync action uses a single batched commit (`chore(tooling): `), labels `automation`, `agent-rules`, `renode`, and attempts draft conversion afterward. The payload is defined by mappings and the runtime manifest; adding files centrally does not automatically distribute them.
+The sync plan validates ten destinations, checks the doctor/regression suite and skill distribution, then renders a per-target config using Python. A matrix with `fail-fast: false` isolates target failures. `SYNC_APP_ID` and `SYNC_APP_PRIVATE_KEY` create per-target GitHub App installation tokens requesting contents and PR writes. The file-sync action uses a single batched commit (`chore(tooling): `), labels `automation` and `agent-rules`, and attempts draft conversion afterward. The payload is defined by mappings and the runtime manifest; adding files centrally does not automatically distribute them. Renode callers and board tests are outside the sync payload.
 
 ## Repository adoption snapshot
 

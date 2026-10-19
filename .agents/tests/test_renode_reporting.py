@@ -86,14 +86,37 @@ class RenodeReportingTests(unittest.TestCase):
         self.assertEqual(result['checks'][0]['conclusion'], 'success')
         self.assertFalse(result['created'])
 
-    def test_publisher_is_separate_and_caller_grants_required_permissions(self):
-        import yaml
-        caller = yaml.load((ROOT / '.github/callers/renode.yml').read_text(), Loader=yaml.BaseLoader)
+    def test_publisher_is_separate_and_has_required_permissions(self):
         publisher = self.workflow['jobs']['publish']
         self.assertEqual(publisher['needs'], 'renode')
         self.assertIn('always()', publisher['if'])
         self.assertEqual(self.workflow['jobs']['renode']['permissions'], {'contents': 'read'})
         self.assertEqual(publisher['runs-on'], 'ubuntu-24.04')
         for permission in ['checks', 'pull-requests']:
-            self.assertEqual(caller['permissions'][permission], 'write')
-        self.assertEqual(caller['permissions']['actions'], 'read')
+            self.assertEqual(publisher['permissions'][permission], 'write')
+        self.assertEqual(publisher['permissions']['actions'], 'read')
+
+    def test_draft_pr_skips_execution_and_publication(self):
+        script = '''
+const data = JSON.parse(require('fs').readFileSync(0, 'utf8'));
+const condition = new Function('inputs', 'github', 'always', 'cancelled',
+                              'return (' + data.condition + ');');
+process.stdout.write(JSON.stringify(condition(data.inputs, data.github,
+                                              () => true, () => false)));
+'''
+        for job in ['renode', 'publish']:
+            for event, draft, enabled, expected in [
+                    ('pull_request', True, True, False),
+                    ('pull_request', False, True, True),
+                    ('workflow_dispatch', None, True, True),
+                    ('workflow_dispatch', None, False, False)]:
+                with self.subTest(job=job, event=event, draft=draft, enabled=enabled):
+                    github = {'event_name': event, 'event': {}}
+                    if draft is not None:
+                        github['event']['pull_request'] = {'draft': draft}
+                    data = {'condition': self.workflow['jobs'][job]['if'],
+                            'inputs': {'enabled': enabled}, 'github': github}
+                    run = subprocess.run([NODE, '-e', script], input=json.dumps(data),
+                                         text=True, capture_output=True, timeout=10)
+                    self.assertEqual(run.returncode, 0, run.stderr)
+                    self.assertEqual(json.loads(run.stdout), expected)

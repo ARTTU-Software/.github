@@ -48,8 +48,6 @@ group:
         dest: .agents/.gitignore
       - source: .agents/skills/
         dest: .agents/skills/
-      - source: .github/callers/renode.yml
-        dest: .github/workflows/renode.yml
     repos: |
       ARTTU-Software/STM32-Template@main
       ARTTU-Software/CAN-Gateway@dev
