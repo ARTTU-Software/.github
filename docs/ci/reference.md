@@ -11,8 +11,6 @@ Start with the [architecture overview](/architecture/github) for the visual expl
 
 ## Workflow contracts
 
-<!-- #region workflow-contracts -->
-
 Workflow files live in `ARTTU-Software/.github/.github/workflows/`. Product callers generally use `ARTTU-Software/.github/.github/workflows/<file>@main`; caller job permissions must accommodate the called workflow. `main` is a moving reference, not a release pin.
 
 ### Ceedling unit tests
@@ -119,12 +117,7 @@ Sources: [agent-harness-check.yml](https://github.com/ARTTU-Software/.github/blo
 
 The sync plan validates ten destinations, checks the doctor/regression suite and skill distribution, then renders a per-target config using Python. A matrix with `fail-fast: false` isolates target failures. `SYNC_APP_ID` and `SYNC_APP_PRIVATE_KEY` create per-target GitHub App installation tokens requesting contents and PR writes. The file-sync action uses a single batched commit (`chore(tooling): `), labels `automation` and `agent-rules`, and attempts draft conversion afterward. The payload is defined by mappings and the runtime manifest; adding files centrally does not automatically distribute them. Renode callers and board tests are outside the sync payload.
 
-
-<!-- #endregion workflow-contracts -->
-
 ## Repository adoption snapshot
-
-<!-- #region repository-adoption-snapshot -->
 
 This matrix records **workflow files in the inspected local repository revisions**, not live GitHub status or a claim that every caller succeeds. Local board revisions can be newer than the documentation hub’s product submodule pins. Sync means membership in central `sync.yml`, not confirmed installation. “—” means the inspected top-level workflows did not define that capability.
 
@@ -147,12 +140,7 @@ All twelve inspected repositories also contain labeler callers that fetch centra
 
 Telemetry’s current Docker simulation job uses a self-hosted Linux/x64 runner, builds its image and Debug firmware, executes `renode/run_tests.sh`, converts Robot output to `junit.xml`, and retains `renode-report` for 14 days. It is separate from the shared runner/publisher implementation and skips draft PRs.
 
-
-<!-- #endregion repository-adoption-snapshot -->
-
 ## Shared PR labels
-
-<!-- #region shared-pr-labels -->
 
 Source: [labeler.yml configuration](https://github.com/ARTTU-Software/.github/blob/main/.github/labeler.yml). Central and product labeler workflows use `pull_request_target`; product callers fetch the central repository’s configuration. Labeling classifies changed paths and does not validate code.
 
@@ -167,12 +155,7 @@ Source: [labeler.yml configuration](https://github.com/ARTTU-Software/.github/bl
 | `documentation` | `docs/**/*`, `**/*.md` |
 | `Build System` | `**/CMakeLists.txt`, `**/*.cmake` |
 
-
-<!-- #endregion shared-pr-labels -->
-
 ## Finding the right failure evidence
-
-<!-- #region finding-the-right-failure-evidence -->
 
 | Symptom | Inspect first |
 | --- | --- |
@@ -187,12 +170,6 @@ Source: [labeler.yml configuration](https://github.com/ARTTU-Software/.github/bl
 | Sync PR is missing or not draft | Plan job, target App installation/permissions, matrix result, file differences, draft conversion log |
 | Green checks do not block a merge | Repository rules and configured required checks |
 
-
-<!-- #endregion finding-the-right-failure-evidence -->
-
 ## Updating these pages
 
-<!-- #region updating-these-pages -->
-
 Edit `.github/docs/ci/` alongside workflow changes. Keep the old [historical reference](/architecture/github-history) clearly dated. Publish the central commit before publishing a documentation hub commit that references it, then advance `repos/agent-harness`, build the hub, and verify `/architecture/github` and `/architecture/github-reference`. Source documentation and workflow definitions share ownership; deployment-specific procedures remain in the deploying repository.
-<!-- #endregion updating-these-pages -->

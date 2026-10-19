@@ -12,8 +12,6 @@ The source is `ARTTU-Software/.github/docs/harness-reference.md`. The documentat
 
 ## Setup and activation
 
-<!-- #region setup-and-activation -->
-
 Run from the repository root:
 
 ```sh
@@ -33,12 +31,7 @@ The doctor validates configuration shapes, adapter selection, runtime files, mat
 
 These are the adapters shipped and tested by this repository. Client acceptance and execution must be checked locally. The Antigravity hook commands are relative to `.agents`; the other hook commands locate the harness by walking up from the current working directory. Preflight timeouts are 15 seconds; stop timeouts are 300 seconds. Cursor preflight specifies `failClosed: true` and its stop hook has `loop_limit: 1`.
 
-
-<!-- #endregion setup-and-activation -->
-
 ## Execution flow
-
-<!-- #region execution-flow -->
 
 ```mermaid
 flowchart TD
@@ -55,12 +48,7 @@ flowchart TD
 
 The preflight hook reconstructs supported edits before execution. The stop hook examines the resulting working tree independently. CI can run the same policy script against an explicit comparison commit. Instructions still govern requirements the scripts cannot establish, including hardware correctness, bounded waits, ISR behavior, and the required target build.
 
-
-<!-- #endregion execution-flow -->
-
 ## Repository rules and skills
-
-<!-- #region repository-rules-and-skills -->
 
 `AGENTS.md` supplies the shared policy. `CLAUDE.md` and `GEMINI.md` provide client entry points. Load only the skill relevant to the task:
 
@@ -75,12 +63,7 @@ The preflight hook reconstructs supported edits before execution. The stop hook 
 
 Hardware contracts must be resolved before changing interfaces. Application/domain code uses BSP, driver, or interface abstractions. Runtime allocation is forbidden; ISR work and hardware waits must remain bounded. These broader engineering requirements need source review and appropriate tests.
 
-
-<!-- #endregion repository-rules-and-skills -->
-
 ## Discovery and context
-
-<!-- #region discovery-and-context -->
 
 The configured MCP packages are `codebase-memory-mcp@0.11.0` and `markdown-docs-mcp@0.1.5`. `mcp_launcher.py` accepts only its reviewed package/version allowlist and launches `npx -y` from the repository root, including Windows `.cmd` handling. The Markdown server's TOC and section byte limits are both 8192.
 
@@ -96,12 +79,7 @@ python .agents/hooks/read_context.py path/to/source.c --start 40 --end 90
 
 `context_cache.py` stores local evidence cards under `.agents/state/context`. Cards contain a scope and selected facts, relationships, unknowns, checks, and coverage. Each card is limited to 8 KiB and records HEAD, named source-file hashes, and an optional graph generation. A changed HEAD, source hash, missing file, or mismatched/unspecified recorded generation invalidates reuse. Cached conclusions still require revalidation when their scope or safety assumptions change.
 
-
-<!-- #endregion discovery-and-context -->
-
 ## Preflight checks
-
-<!-- #region preflight-checks -->
 
 `pre_tool_enforcer.py` normalizes client payloads through `hook_io.py`, rejects payloads over 2 MiB, then dispatches by tool name. `edit_plan.py` and `patch_plan.py` reconstruct complete supported mutations, including multi-edit operations, and reject missing or ambiguous context. `policy.py` evaluates the proposed before/after content.
 
@@ -121,12 +99,7 @@ Hooks are **not a sandbox**. Opaque scripts, specialized tools, unrecognized ope
 
 Protected-file changes require explicit human approval under repository policy. Hook exceptions use exact absolute paths in a reviewed hook definition; the standalone verifier also accepts exact reviewer-approved paths. Do not automatically enable exceptions in CI.
 
-
-<!-- #endregion preflight-checks -->
-
 ## Verification and failure handling
-
-<!-- #region verification-and-failure-handling -->
 
 At cohesive firmware milestones, run the full Ceedling suite (`bundle exec ceedling test:all` for Bundler repositories, otherwise `ceedling test:all`) and the board's required target build. The stop hook does not run the target build.
 
@@ -146,12 +119,7 @@ A first stop failure asks the agent to fix the issue or report verification bloc
 
 Before a commit or PR, use `detect_changes(base_branch="dev", depth=2)` when available and `dev` exists. Otherwise review a bounded Git diff and report the fallback. Firmware PRs target `dev`. The central harness repository currently uses `main`; keep work local until its publication target is resolved.
 
-
-<!-- #endregion verification-and-failure-handling -->
-
 ## Distribution and CI
-
-<!-- #region distribution-and-ci -->
 
 `.github/sync.yml` defines source/destination mappings and targets. `.agents/harness-manifest.json`, `doctor.py`, and `sync_plan.py check` validate the runtime payload. The sync workflow runs on relevant pushes to central `main` and manual dispatch, builds its target matrix from the plan, and opens sync PRs through a GitHub App. It attempts to convert created PRs to drafts.
 
@@ -163,12 +131,7 @@ The payload copies agent entry points, skills including references/metadata, hoo
 
 STM32-Template provides a starter Renode caller invoking the central reusable `renode-test.yml@main`; existing boards adopt and maintain their own callers. The template selects the workshop runner group; repository variables select paths, commands, requirements, and parallelism. `RENODE_ENABLED=false` opts out. Without board commands/manifest, only infrastructure smoke coverage is expected. The template caller excludes fork and draft PRs and runs when a PR becomes ready for review. The central reusable workflow also skips execution and publication for draft PRs. Renode regression and physical SWD validation remain distinct workflows.
 
-
-<!-- #endregion distribution-and-ci -->
-
 ## Maintaining the harness
-
-<!-- #region maintaining-the-harness -->
 
 After runtime or distribution changes, run in the central `.github` repository:
 
@@ -183,5 +146,4 @@ python .agents/hooks/verify_changes.py --base HEAD
 
 When documentation changes, commit the updated page in `.github`, publish that commit through the agreed branch, then update `repos/agent-harness` in the documentation repo and run `npm run docs:build`. The hub retains its existing public route through a VitePress rewrite. Deployment keeps this submodule at the recorded commit; the other product submodules retain their release-tag policy.
 
-Historical performance percentages and quality scores from the previous page are omitted: they are not reproducible evidence for the current harness. `benchmark_context.py` measures instruction entry-point bytes against a Git base; it does not measure paid/model tokens or firmware correctness.
-<!-- #endregion maintaining-the-harness -->
+The [earlier benchmark results](/architecture/agentic-harness-benchmarks) preserve the previous run comparison and pie charts as historical data. `benchmark_context.py` measures instruction entry-point bytes against a Git base; it does not measure paid/model tokens or firmware correctness.
