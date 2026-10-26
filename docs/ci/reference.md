@@ -59,7 +59,7 @@ This matrix records **workflow files in the inspected local repository revisions
 | utilities · `fe92638` | — | No build artifact requested | — | `main` |
 | Backend · `991f9c0` | — | No build artifact requested | — | — |
 
-All twelve inspected repositories also contain labeler callers that fetch central configuration. Backend separately deploys over SSH on `main` pushes. The documentation repository has a labeler plus its own three-trigger deployment (push to `main`, `docs-release` dispatch, manual). Its deployment operations remain documented there. Partners-Database-App was not reverified in this review.
+All twelve inspected repositories also contain labeler callers that fetch central configuration. Backend separately deploys over SSH on `main` pushes. The documentation repository has a labeler plus its own deployment workflow (push to `main` deploys to server; `docs-release` dispatch and manual dispatch deploy immediately to the server and open/update a draft submodule sync PR via `arttu-sync-bot` without directly committing to `main`). Its deployment operations remain documented there. Partners-Database-App was not reverified in this review.
 
 Telemetry’s current Docker simulation job uses a self-hosted Linux/x64 runner, builds its image and Debug firmware, executes `renode/run_tests.sh`, converts Robot output to `junit.xml`, and retains `renode-report` for 14 days. It is separate from the shared runner/publisher implementation and skips draft PRs.
 
@@ -79,6 +79,7 @@ See the [labelling procedure](/architecture/ci/labels) for the rules, permission
 | Renode produces no xUnit | Setup/build/runner failure, execution check, artifact logs and result paths |
 | Release lacks firmware assets | Optional download result, artifact name, and matching file paths |
 | Documentation stays on older content | Dispatch step, hub deployment result, product tags, and the recorded central-docs submodule commit |
+| Submodule sync PR is missing or failing | Inspect sync-submodules-pr job logs, SYNC_APP_ID / SYNC_APP_PRIVATE_KEY / DOCS_DISPATCH_TOKEN secrets, and App permissions on ARTTU-Software/documentation |
 | Sync PR is missing or not draft | Plan job, target App installation/permissions, matrix result, file differences, draft conversion log |
 | Green checks do not block a merge | Repository rules and configured required checks |
 

@@ -31,7 +31,9 @@ flowchart TB
 
 Open the release and check the tag, notes and attached files. The shared publisher allows a release without matching firmware files. If you expected a binary, inspect the build artifact and download step even when the release exists.
 
-Release publication and the documentation update are separate operations. Follow the notification step, then the documentation deployment run to see whether the website refreshed.
+Release publication and the documentation update are separate operations. Follow the notification step, then the documentation deployment run. The notification dispatches an event to the documentation repository that runs two actions in parallel:
+1. Deploys immediately to the production server over SSH, rebuilding the VitePress site with the new release tag.
+2. Updates or creates an automated Draft Pull Request (`sync/submodules`) via `arttu-sync-bot` to advance the recorded submodule commit pointer in Git without directly committing to `main`.
 
 ## Repositories without a firmware build
 
