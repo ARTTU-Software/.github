@@ -56,7 +56,7 @@ group:
       ARTTU-Software/Telemetry@dev
       ARTTU-Software/LVSOC-26@dev
       ARTTU-Software/Galvanic-Isolator@dev
-      ARTTU-Software/common@dev
+      ARTTU-Software/common@main
       ARTTU-Software/utilities@main
       ARTTU-Software/BMS-Master@dev
       ARTTU-Software/Quizz-Workflow@dev
