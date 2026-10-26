@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*' # tag needs to start with 'v' followed by version number, e.g., v1.0.0
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # ==========================================
+  # 1. Create Release & Notify Documentation on Tag
+  publish-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    name: Publish Release
+    secrets: inherit
+    permissions:
+      contents: write
+    uses: ARTTU-Software/.github/.github/workflows/create-release.yml@main
+
+  # ==========================================
+  # 2. Direct Documentation Dispatch (when run manually on a branch)
+  dispatch-docs:
+    if: github.event_name == 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/v')
+    name: Notify Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify documentation
+        uses: peter-evans/repository-dispatch@ff45666b9427631e3450c54a1bcbee4d9ff4d7c0 # v3
+        with:
+          token: ${{ secrets.DOCS_DISPATCH_TOKEN }}
+          repository: ARTTU-Software/documentation
+          event-type: docs-release
+          client-payload: |
+            {"repo":"${{ github.event.repository.name }}","tag":"${{ github.ref_name }}"}

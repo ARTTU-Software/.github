@@ -14,7 +14,7 @@ flowchart TB
     RELEASE["Product sends<br/>docs-release event"] --> SSH
     MANUAL["Manual deployment<br/>request"] --> SSH
     SSH --> REFRESH["Server refreshes<br/>documentation main; runs<br/>deploy.sh"]
-    REFRESH --> REVISIONS["Select product release<br/>tags; retain recorded<br/>central .github commit"]
+    REFRESH --> REVISIONS["Select latest release tags<br/>for all submodules<br/>including .github"]
     REVISIONS --> BUILD["Docker Compose builds<br/>site image"]
     BUILD --> OK{"Build succeeded?"}
     OK -->|Yes| SERVE["Start updated container"]
@@ -33,7 +33,7 @@ flowchart TB
 
 Git submodules record a specific commit from another repository. Deployment fetches product submodules and selects the latest `v*` tag using Git's version sorting. A product without a matching tag stays at its existing revision.
 
-The central .github docs submodule stays at the commit recorded by the hub. To publish shared documentation, first publish its central commit, then update and publish the hub's submodule pointer. A release notification does not advance that pointer.
+The central .github repository publishes versioned release tags through its release workflow and sends the docs-release dispatch to the documentation repository, triggering server-side tag checkout and container rebuild just like product repositories.
 
 ## Server handoff and failure evidence
 
