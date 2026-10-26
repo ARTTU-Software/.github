@@ -47,7 +47,7 @@ Open the **GitHub CI/CD** group in the sidebar. Each procedure has its own page:
 | [Firmware build](/architecture/ci/firmware-build) | Compile for STM32 and save firmware and compiler settings |
 | [Code analysis](/architecture/ci/static-analysis) | Inspect changed code using the build settings |
 | [Renode simulation](/architecture/ci/renode) | Run configured firmware scenarios in an emulated machine |
-| [CAN header generation](/architecture/ci/generated-can) | Check that generated C headers match the DBC and generator |
+| [CAN database sync and headers](/architecture/ci/generated-can) | Sync SharePoint database changes, validate DBC and headers, run regression tests, and check PRs |
 | [Release publication](/architecture/ci/releases) | Publish a tagged version and notify the documentation repository |
 | [Documentation deployment](/architecture/ci/documentation-deployment) | Select documentation revisions, build the website and update its container |
 | [Backend deployment](/architecture/ci/backend-deployment) | Ask the production server to run its deployment script |
@@ -82,6 +82,6 @@ flowchart TB
     class CALLER,CENTRAL,RESULT,REVIEW work
 ```
 
-Some procedures belong entirely to one repository, such as common's CAN header check and the Backend deployment. Their pages identify the owning workflow rather than implying that all repositories run them.
+Some procedures belong entirely to one repository, such as common's CAN database sync and header checks and the Backend deployment. Their pages identify the owning workflow rather than implying that all repositories run them.
 
 See [repository coverage and troubleshooting](/architecture/github-reference) for the inspected adoption snapshot and where to look when a check fails. These pages are maintained in `.github/docs/ci/`; the documentation site reads the recorded central commit through its submodule.

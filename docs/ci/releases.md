@@ -35,7 +35,7 @@ Release publication and the documentation update are separate operations. Follow
 
 ## Repositories without a firmware build
 
-Library and application callers can use the same publisher with an empty artifact name. They get release notes and the documentation notification without requesting STM32 files. The caller determines whether a build is needed first.
+Library and application callers can use the same publisher with an empty artifact name. They get release notes and the documentation notification without requesting STM32 files. The caller determines whether a build is needed first. The [common library's release caller](https://github.com/ARTTU-Software/common/blob/main/.github/workflows/release.yml) uses this publisher and adds an asset-upload step that attaches `MAIN_DBC.dbc`, `can_signal_defs.h`, `can_board_defs.h`, and `can-database-source.json` to the release. The automated CAN sync workflow dispatches this release pipeline automatically at each new patch tag.
 
 The [STM32-Template caller](https://github.com/ARTTU-Software/STM32-Template/blob/main/.github/workflows/release.yml) responds to `v*` tag pushes and uses `needs: build-firmware`. See [documentation deployment](/architecture/ci/documentation-deployment) for what the notification starts.
 
