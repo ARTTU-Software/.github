@@ -53,7 +53,7 @@ group:
       ARTTU-Software/CAN-Gateway@dev
       ARTTU-Software/ECU@dev
       ARTTU-Software/Dashboard@dev
-      ARTTU-Software/Telemetry@dev
+      ARTTU-Software/Telemetry@dev-rev-b
       ARTTU-Software/LVSOC-26@dev
       ARTTU-Software/Galvanic-Isolator@dev
       ARTTU-Software/common@main
