@@ -18,7 +18,7 @@ flowchart TB
         ARTIFACT --> CHANGED{"Definitions<br/>changed?"}
         CHANGED -->|No| UNCHANGED["Finish run without<br/>commit or tag"]
         CHANGED -->|Yes| CEEDLING["Run Ceedling C<br/>regression tests"]
-        CEEDLING --> PUBLISH["Atomically commit to<br/>main and create tag"]
+        CEEDLING --> PUBLISH["Atomically commit to<br/>dev and create tag"]
         PUBLISH --> RELEASE["Dispatch release.yml<br/>with new tag"]
         RELEASE --> ASSETS["Attach DBC, headers<br/>and source manifest to release"]
         RELEASE --> DOCS["Notify documentation<br/>via docs-release event"]
@@ -58,14 +58,14 @@ The SharePoint workbook remains the master editable source for the vehicle CAN n
 3. **C11 compilation check:** Compiles `#include "can_board_defs.h"` with `-std=c11 -Wall -Wextra -Werror -fsyntax-only` to ensure the generated C definitions are syntactically valid before continuing.
 4. **Downloadable artifact:** Always uploads the `can-database` artifact containing the DBC, headers, and manifest. Anyone on the team can download the latest DBC directly from the Actions run without waiting for a commit or release.
 5. **C regression tests:** If definitions have changed, the workflow sets up Ruby and runs `bundle exec ceedling test:all`. Bundler's `BUNDLE_GEMFILE` is kept outside the git checkout so generated lockfiles do not dirty the repository.
-6. **Atomic commit and version bump:** Commits generated definitions directly to `main` with commit message `chore(can): sync SharePoint database (vX.Y.Z)` and atomically increments the patch tag (e.g. `v1.5.0` to `v1.5.1`). Unrelated modified or untracked files cause the publisher to abort.
+6. **Atomic commit and version bump:** Commits generated definitions directly to `dev` with commit message `chore(can): sync SharePoint database (vX.Y.Z)` and atomically increments the patch tag (e.g. `v1.5.0` to `v1.5.1`). Unrelated modified or untracked files cause the publisher to abort.
 7. **Release and documentation notification:** Pushes made by `GITHUB_TOKEN` do not trigger tag push events. The sync workflow therefore explicitly dispatches `release.yml --ref <tag>`. The release workflow attaches `MAIN_DBC.dbc`, the headers, and `can-database-source.json` to the GitHub release, and calls `create-release.yml` to send a `docs-release` repository dispatch to `ARTTU-Software/documentation`, triggering a documentation server update over SSH.
 
 ### Concurrency and configuration
 
-- **Concurrency:** Manual and scheduled runs share concurrency group `can-database-main` with `cancel-in-progress: false` to ensure a publication run is never interrupted.
+- **Concurrency:** Manual and scheduled runs share concurrency group `can-database-dev` with `cancel-in-progress: false` to ensure a publication run is never interrupted.
 - **Schedule:** Runs hourly at minute 17 UTC when repository variable `CAN_SYNC_ENABLED` is set to `true`.
-- **Manual execution:** Can be triggered at any time from Actions → **Sync CAN database** → **Run workflow** on `main`.
+- **Manual execution:** Can be triggered at any time from Actions → **Sync CAN database** → **Run workflow** on `dev`.
 
 ## Pull-request DBC verification (`dbc_codegen.yml`)
 
@@ -82,9 +82,9 @@ If the committed headers do not match the generator output, the check fails. Dev
 
 ## Workflow sources
 
-- SharePoint sync: [can_sync.yml](https://github.com/ARTTU-Software/common/blob/main/.github/workflows/can_sync.yml)
-- PR DBC verification: [dbc_codegen.yml](https://github.com/ARTTU-Software/common/blob/main/.github/workflows/dbc_codegen.yml)
-- Release caller: [release.yml](https://github.com/ARTTU-Software/common/blob/main/.github/workflows/release.yml)
-- Detailed sync guide: [can-database-sync.md](https://github.com/ARTTU-Software/common/blob/main/docs/can-database-sync.md)
+- SharePoint sync: [can_sync.yml](https://github.com/ARTTU-Software/common/blob/dev/.github/workflows/can_sync.yml)
+- PR DBC verification: [dbc_codegen.yml](https://github.com/ARTTU-Software/common/blob/dev/.github/workflows/dbc_codegen.yml)
+- Release caller: [release.yml](https://github.com/ARTTU-Software/common/blob/dev/.github/workflows/release.yml)
+- Detailed sync guide: [can-database-sync.md](https://github.com/ARTTU-Software/common/blob/dev/docs/can-database-sync.md)
 
 [Back to CI/CD overview](/architecture/github)

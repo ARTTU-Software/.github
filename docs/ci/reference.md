@@ -54,7 +54,7 @@ This matrix records **workflow files in the inspected local repository revisions
 | Dashboard · `d38d97c` | Ceedling + build + lint; extra test caller | Firmware assets | — | `dev` |
 | BMS-Master · `2b938c3` | Ceedling + build + lint | Firmware assets | Shared caller | `dev` |
 | STM32-Template · `f7636bb` | Ceedling + build + lint | Firmware assets | Shared caller | `main` |
-| common · `76140ca` | Ceedling + SharePoint CAN sync + DBC codegen check | CAN database & header release assets | — | `dev` / `main` |
+| common · `76140ca` | Ceedling + SharePoint CAN sync + DBC codegen check | CAN database & header release assets | — | `dev` |
 | .github · `c346ede` | Harness CI checks + Tooling sync | Release caller & docs dispatch | Shared caller | `main` |
 | utilities · `fe92638` | — | No build artifact requested | — | `main` |
 | Backend · `991f9c0` | — | No build artifact requested | — | — |
